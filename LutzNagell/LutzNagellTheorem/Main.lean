@@ -50,17 +50,12 @@ theorem lutz_nagell_discriminant (A B : ℤ) (hΔ : (shortCurveZ A B).Δ ≠ 0)
     (htor : IsOfFinAddOrder (Affine.Point.some hpt))
     {x₀ y₀ : ℤ} (hx : (x₀ : ℚ) = x) (hy : (y₀ : ℚ) = y) :
     y₀ = 0 ∨ y₀ ^ 2 ∣ (shortCurveZ A B).Δ := by
-  -- Apply the general discriminant theorem to shortCurveZ
   rcases lutz_nagell_discriminant_general (shortCurveZ A B) hpt htor hx hy with hκ | hdvd
-  · -- κ₀ = 2y₀ + 0·x₀ + 0 = 0 implies y₀ = 0
-    simp only [shortCurveZ_a₁, shortCurveZ_a₃, zero_mul, add_zero] at hκ
+  · simp only [shortCurveZ_a₁, shortCurveZ_a₃, zero_mul, add_zero] at hκ
     exact Or.inl (by omega)
-  · -- κ₀² | 4Δ, i.e. (2y₀)² | 4Δ, i.e. 4y₀² | 4Δ, i.e. y₀² | Δ
-    right
+  · right
     simp only [shortCurveZ_a₁, shortCurveZ_a₃, zero_mul, add_zero] at hdvd
-    -- hdvd : (2 * y₀) ^ 2 ∣ 4 * (shortCurveZ A B).Δ
-    have h_eq : (2 * y₀) ^ 2 = 4 * y₀ ^ 2 := by ring
-    rw [h_eq] at hdvd
+    rw [show (2 * y₀) ^ 2 = 4 * y₀ ^ 2 from by ring] at hdvd
     exact (mul_dvd_mul_iff_left (by norm_num : (4 : ℤ) ≠ 0)).mp hdvd
 
 /-- **The Lutz–Nagell theorem** (Theorem 1.1 of "Nagell-Lutz, quickly").

@@ -36,6 +36,14 @@ lemma nsmul_eq_zero_affine_to_jac
 
 /-! ### Helper lemmas for the main theorem -/
 
+/-- A nonzero affine point is of the form `.some hns`. -/
+lemma exists_some_of_ne_zero
+    {Q : Affine.Point ((curveQ W).toAffine)} (hQ : Q ≠ 0) :
+    ∃ x y, ∃ hns : (curveQ W).toAffine.Nonsingular x y, Q = .some hns := by
+  rcases Q with _ | ⟨hns⟩
+  · exact absurd rfl hQ
+  · exact ⟨_, _, hns, rfl⟩
+
 private lemma integrality_of_odd_prime_factor
     {x y : ℚ} (hpt : (curveQ W).toAffine.Nonsingular x y)
     {p : ℕ} (hp : p.Prime) (hodd : p ≠ 2)
