@@ -54,8 +54,7 @@ theorem evalEval_Ψ_sq_eq_eval_ΨSq (heq : W.toAffine.Equation x y) (n : ℤ) :
 theorem evalEval_φ_eq_eval_Φ (heq : W.toAffine.Equation x y) (n : ℤ) :
     (W.φ n).evalEval x y = (W.Φ n).eval x := by
   have h := evalEval_eq_of_mk_eq W heq (Affine.CoordinateRing.mk_φ W n)
-  rw [evalEval_C] at h
-  exact h
+  rwa [evalEval_C] at h
 
 /-! ### Odd-n specialization -/
 

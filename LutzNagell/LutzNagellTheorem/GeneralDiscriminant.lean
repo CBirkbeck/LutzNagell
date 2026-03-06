@@ -185,8 +185,7 @@ private lemma kappa_sq_dvd_four_Psi3
     rw [show (2 : ℤ) = ↑(2 : ℕ) from rfl, natCast_zsmul]; exact h2P_eq
   have hcoord := x_coord_nsmul_eq_general W hpt
     (show (2 : ℤ) ≠ 0 by norm_num) hns' h2P_zsmul
-  rw [PsiSq_two_eval_eq] at hcoord
-  rw [Phi2_eval_eq] at hcoord
+  rw [PsiSq_two_eval_eq, Phi2_eval_eq] at hcoord
   have hPsi3_eq : eval x (curveQ W).Ψ₃ =
       (x - x') * eval x (curveQ W).Ψ₂Sq := by linarith
   rw [Psi2Sq_eval_eq, Psi3_eval_eq] at hPsi3_eq

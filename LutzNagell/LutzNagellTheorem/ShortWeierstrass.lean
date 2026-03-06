@@ -52,8 +52,6 @@ def shortCurveQ (A B : ℤ) : WeierstrassCurve ℚ :=
 
 lemma shortCurveQ_equation_iff (A B : ℤ) (x y : ℚ) :
     (shortCurveQ A B).toAffine.Equation x y ↔ y ^ 2 = x ^ 3 + (A : ℚ) * x + (B : ℚ) := by
-  -- `Equation` is stated as an equality in affine coordinates; for the short curve the cross-terms
-  -- vanish by simp.
   simpa [shortCurveQ, shortCurveZ, add_assoc, add_comm, add_left_comm, mul_assoc]
     using (WeierstrassCurve.Affine.equation_iff (W := shortCurveQ A B) x y)
 

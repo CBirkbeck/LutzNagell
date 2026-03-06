@@ -102,8 +102,8 @@ theorem x_integral_of_odd_prime_torsion_general
       simp only [show ¬Even (Int.ofNat p) from hodd_int, ite_false] at this
       exact_mod_cast this
     rw [hlc]
-  have hden_eq := Rat.isFractionRingDen x
-  have hdvd_nat : x.den ∣ p := by rw [← hden_eq]; exact Int.natAbs_dvd_natAbs.mpr hdvd_p
+  have hdvd_nat : x.den ∣ p := by
+    rw [← Rat.isFractionRingDen x]; exact Int.natAbs_dvd_natAbs.mpr hdvd_p
   have hden_one : x.den = 1 := by
     rcases hp.eq_one_or_self_of_dvd x.den hdvd_nat with h | h
     · exact h
@@ -127,26 +127,23 @@ theorem integrality_of_order_four_general
   rw [WeierstrassCurve.ψ_four] at hψ₄
   simp only [evalEval_mul, evalEval_C] at hψ₄
   rcases mul_eq_zero.mp hψ₄ with hpreΨ | hψ₂
-  · -- preΨ₄(x) = 0: rational root theorem gives x.den | 2
-    have hmap : (curveQ W).preΨ₄ = W.preΨ₄.map (algebraMap ℤ ℚ) := by
+  · have hmap : (curveQ W).preΨ₄ = W.preΨ₄.map (algebraMap ℤ ℚ) := by
       change (W.map (algebraMap ℤ ℚ)).preΨ₄ = _; rw [WeierstrassCurve.map_preΨ₄]
     rw [hmap, eval_map] at hpreΨ
     change aeval x W.preΨ₄ = 0 at hpreΨ
     have hdvd := den_dvd_of_is_root hpreΨ
     rw [W.leadingCoeff_preΨ₄ (by norm_num : (2 : ℤ) ≠ 0)] at hdvd
-    have hden_eq := Rat.isFractionRingDen x
-    have hdvd_nat : x.den ∣ 2 := by rw [← hden_eq]; exact Int.natAbs_dvd_natAbs.mpr hdvd
-    have hp2 : Nat.Prime 2 := by decide
+    have hdvd_nat : x.den ∣ 2 := by
+      rw [← Rat.isFractionRingDen x]; exact Int.natAbs_dvd_natAbs.mpr hdvd
     have hden_one : x.den = 1 := by
-      rcases hp2.eq_one_or_self_of_dvd x.den hdvd_nat with h | h
+      rcases (by decide : Nat.Prime 2).eq_one_or_self_of_dvd x.den hdvd_nat with h | h
       · exact h
       · exact absurd h (fun h => den_ne_prime_of_on_general_curve W
-          ((curveQ_equation_iff W x y).mp hns.left) hp2 h)
+          ((curveQ_equation_iff W x y).mp hns.left) (by decide) h)
     have hx₀ : (x.num : ℚ) = x := by rwa [← Rat.den_eq_one_iff]
     exact ⟨⟨x.num, hx₀⟩, y_integral_of_x_integral_on_general_curve W
       ((curveQ_equation_iff W x y).mp hns.left) hx₀⟩
-  · -- ψ₂(x,y) = 0 → 2•P = 0, contradiction
-    exact absurd (two_nsmul_eq_zero_of_ψ₂_eq_zero W hns hψ₂) h2ne
+  · exact absurd (two_nsmul_eq_zero_of_ψ₂_eq_zero W hns hψ₂) h2ne
 
 /-! ### Odd prime order: full integrality -/
 
@@ -174,23 +171,17 @@ theorem bounded_den_of_order_two_general
     {x y : ℚ} (hns : (curveQ W).toAffine.Nonsingular x y)
     (h2 : (2 : ℤ) • (Jacobian.Point.fromAffine (Affine.Point.some hns)) = 0) :
     (∃ n : ℤ, (n : ℚ) = 4 * x) ∧ ∃ m : ℤ, (m : ℚ) = 8 * y := by
-  -- Step 1: Get ψ₂(x,y) = 0 from 2 • P = 0
   have hψ := evalEval_ψ_eq_zero_of_zsmul_eq_zero_general W hns 2 h2
   rw [WeierstrassCurve.ψ_two] at hψ
-  -- Get the numerical form: 2y + a₁x + a₃ = 0
   have hψ_num : 2 * y + (W.a₁ : ℚ) * x + (W.a₃ : ℚ) = 0 := by
     have h := hψ
     rw [WeierstrassCurve.ψ₂, WeierstrassCurve.Affine.evalEval_polynomialY] at h
     simp only [curveQ_a₁, curveQ_a₃] at h; linarith
-  -- Step 2: Get Ψ₂Sq(x) = 0 via coordinate ring bridge
   have hΨ_zero : (curveQ W).Ψ₂Sq.eval x = 0 := by
     have h := evalEval_eq_of_mk_eq (curveQ W) hns.left
       (Affine.CoordinateRing.mk_ψ₂_sq (W := curveQ W))
-    rw [evalEval_pow] at h
-    rw [hψ, zero_pow two_ne_zero] at h
-    rw [evalEval_C] at h
+    rw [evalEval_pow, hψ, zero_pow two_ne_zero, evalEval_C] at h
     linarith
-  -- Step 3: Map to ℤ and apply rational root theorem
   have hmap : (curveQ W).Ψ₂Sq = W.Ψ₂Sq.map (algebraMap ℤ ℚ) := by
     change (W.map (algebraMap ℤ ℚ)).Ψ₂Sq = _; rw [WeierstrassCurve.map_Ψ₂Sq]
   rw [hmap, eval_map] at hΨ_zero
@@ -199,9 +190,8 @@ theorem bounded_den_of_order_two_general
   rw [W.leadingCoeff_Ψ₂Sq (by norm_num : (4 : ℤ) ≠ 0)] at hdvd
   have hden_eq := Rat.isFractionRingDen x
   have hdvd_nat : x.den ∣ 4 := by rw [← hden_eq]; exact Int.natAbs_dvd_natAbs.mpr hdvd
-  -- Step 4: 4x ∈ ℤ
   have hfour_x : ∃ n : ℤ, (n : ℚ) = 4 * x := by
-    obtain ⟨k, hk⟩ := hdvd_nat  -- hk : 4 = x.den * k
+    obtain ⟨k, hk⟩ := hdvd_nat
     set d := x.den with hd_def
     set α := x.num with hα_def
     have hd_ne : (d : ℚ) ≠ 0 := Nat.cast_ne_zero.mpr (hd_def ▸ x.pos.ne')
@@ -211,12 +201,9 @@ theorem bounded_den_of_order_two_general
     rw [hx_eq, h4_eq]
     push_cast
     field_simp
-  -- Step 5: 8y ∈ ℤ from 2y = -(a₁x + a₃)
   obtain ⟨n₀, hn₀⟩ := hfour_x
   exact ⟨⟨n₀, hn₀⟩, -(W.a₁ * n₀) - 4 * W.a₃, by
-    push_cast
-    have h_eq : (↑W.a₁ : ℚ) * ↑n₀ = 4 * ↑W.a₁ * x := by rw [hn₀]; ring
-    linarith [h_eq, hψ_num]⟩
+    push_cast; linarith [show (↑W.a₁ : ℚ) * ↑n₀ = 4 * ↑W.a₁ * x from by rw [hn₀]; ring]⟩
 
 end LutzNagellTheorem
 end LutzNagell

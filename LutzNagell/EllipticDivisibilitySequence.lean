@@ -659,8 +659,7 @@ provided some even term is not a zero divisor. -/
 lemma zero (m : ℤ) (mem : W (2 * m) ∈ R⁰) : W 0 = 0 := by
   have := ell m m (2 * m)
   rw [Rel₃, add_comm, sub_self, sub_self, ← two_mul, mul_comm (W _)] at this
-  have h := (pow_mem mem 2).2 (W 0 * W (2 * m)) this
-  exact mem.2 _ h
+  exact mem.2 _ ((pow_mem mem 2).2 (W 0 * W (2 * m)) this)
 
 lemma sub_add_neg_sub_mul_eq_zero (m n r : ℤ) :
     (W (m - n) + W (-(m - n))) * W (m + n) * W r ^ 2 = 0 := by
@@ -678,14 +677,14 @@ lemma neg (m : ℤ) : W (-m) = - W m := by
   obtain ⟨m, rfl|rfl⟩ := m.even_or_odd'
   · refine two.2 _ ((pow_mem one 2).2 _ ?_)
     have := sub_add_neg_sub_mul_eq_zero ell (1 - ↑m) (↑m + 1) 1
-    have h1 : ((1 : ℤ) - ↑m - (↑m + 1)) = -(2 * ↑m) := by omega
-    have h2 : ((1 : ℤ) - ↑m + (↑m + 1)) = 2 := by omega
-    rw [h1, h2] at this; simpa [neg_neg] using this
+    rw [show ((1 : ℤ) - ↑m - (↑m + 1)) = -(2 * ↑m) from by omega,
+      show ((1 : ℤ) - ↑m + (↑m + 1)) = 2 from by omega] at this
+    simpa [neg_neg] using this
   · refine one.2 _ ((pow_mem one 2).2 _ ?_)
     have := sub_add_neg_sub_mul_eq_zero ell (-↑m) (↑m + 1) 1
-    have h1 : ((-↑m : ℤ) - (↑m + 1)) = -(2 * ↑m + 1) := by omega
-    have h2 : ((-↑m : ℤ) + (↑m + 1)) = 1 := by omega
-    rw [h1, h2] at this; simpa [neg_neg] using this
+    rw [show ((-↑m : ℤ) - (↑m + 1)) = -(2 * ↑m + 1) from by omega,
+      show ((-↑m : ℤ) + (↑m + 1)) = 1 from by omega] at this
+    simpa [neg_neg] using this
 
 protected lemma rel₄ {a b c d : ℤ} (same : HaveSameParity₄ a b c d) : rel₄ W a b c d = 0 :=
   rel₄_of_oddRec_evenRec (ell.neg one two) (ell.zero 1 two) one two
@@ -1432,7 +1431,7 @@ omit ellW ellU one two dvd₁₂ dvd₁₃ dvd₂₄ in
 /-- A normalised EDS is in fact a divisibility sequence. -/
 protected theorem IsDivSequence.normEDS : IsDivSequence (normEDS b c d) := by
   intro m n ⟨k, hk⟩
-  rw [hk, show m * k = k * m from mul_comm m k]
+  rw [hk, mul_comm m k]
   exact ⟨_, (normEDS_mul_complEDS m k).symm⟩
 
 omit ellW ellU one two dvd₁₂ dvd₁₃ dvd₂₄ in
