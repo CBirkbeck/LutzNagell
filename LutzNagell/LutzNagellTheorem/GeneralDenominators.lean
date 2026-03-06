@@ -70,10 +70,9 @@ theorem den_ne_prime_of_on_general_curve {x y : ℚ}
   have hp_int : Prime (p : ℤ) := Nat.prime_iff_prime_int.mp hp
   have hp_not_dvd_α : ¬ (p : ℤ) ∣ α := by
     intro ⟨k, hk⟩
-    have h1 : p ∣ α.natAbs := ⟨k.natAbs, by rw [hk, Int.natAbs_mul, Int.natAbs_natCast]⟩
-    have h2 : p ∣ Nat.gcd α.natAbs p := Nat.dvd_gcd h1 dvd_rfl
-    rw [hcop_x] at h2
-    exact absurd (Nat.le_of_dvd one_pos h2) (not_le.mpr hp.one_lt)
+    have h2 : p ∣ Nat.gcd α.natAbs p :=
+      Nat.dvd_gcd ⟨k.natAbs, by rw [hk, Int.natAbs_mul, Int.natAbs_natCast]⟩ dvd_rfl
+    exact absurd (Nat.le_of_dvd one_pos (hcop_x ▸ h2)) (not_le.mpr hp.one_lt)
   -- Step 1: Clear denominators. x = α/p, y = γ/y.den. Multiply by p³ · y.den².
   have hQ : (γ : ℚ) ^ 2 * (p : ℚ) ^ 3 +
       (W.a₁ : ℚ) * α * γ * (p : ℚ) ^ 2 * y.den +
@@ -95,9 +94,10 @@ theorem den_ne_prime_of_on_general_curve {x y : ℚ}
   -- Step 2: p divides everything on LHS, so p | δ²·(sum). Since p ∤ sum, p | δ².
   have hlhs_dvd : (p : ℤ) ∣ γ ^ 2 * (p : ℤ) ^ 3 + W.a₁ * α * γ * (p : ℤ) ^ 2 * y.den +
       W.a₃ * γ * (p : ℤ) ^ 3 * y.den := by
-    apply dvd_add; apply dvd_add
-    · exact dvd_mul_of_dvd_right (dvd_pow_self _ (by norm_num : 3 ≠ 0)) _
-    · exact dvd_mul_of_dvd_left (dvd_mul_of_dvd_right (dvd_pow_self _ (by norm_num : 2 ≠ 0)) _) _
+    apply dvd_add
+    · apply dvd_add
+      · exact dvd_mul_of_dvd_right (dvd_pow_self _ (by norm_num : 3 ≠ 0)) _
+      · exact dvd_mul_of_dvd_left (dvd_mul_of_dvd_right (dvd_pow_self _ (by norm_num : 2 ≠ 0)) _) _
     · exact dvd_mul_of_dvd_left (dvd_mul_of_dvd_right (dvd_pow_self _ (by norm_num : 3 ≠ 0)) _) _
   have hrhs_dvd : (p : ℤ) ∣ (y.den : ℤ) ^ 2 * (α ^ 3 + W.a₂ * α ^ 2 * p +
       W.a₄ * α * (p : ℤ) ^ 2 + W.a₆ * (p : ℤ) ^ 3) := hZ ▸ hlhs_dvd
@@ -145,11 +145,11 @@ theorem den_ne_prime_of_on_general_curve {x y : ℚ}
     exact ⟨k₁ - k₂, by linarith⟩
   have hp_dvd_γ : (p : ℤ) ∣ γ := hp_int.dvd_of_dvd_pow hp_dvd_γsq
   -- Step 5: Contradiction. p | γ and p | y.den, but gcd(|γ|, y.den) = 1.
-  have h1 : p ∣ γ.natAbs := by
-    have := Int.natAbs_dvd_natAbs.mpr hp_dvd_γ
-    rwa [Int.natAbs_natCast] at this
-  have h2 : p ∣ y.den := Int.natCast_dvd_natCast.mp ⟨δ₁, hδ₁⟩
-  have : p ∣ Nat.gcd γ.natAbs y.den := Nat.dvd_gcd h1 h2
+  have : p ∣ Nat.gcd γ.natAbs y.den := by
+    apply Nat.dvd_gcd
+    · have := Int.natAbs_dvd_natAbs.mpr hp_dvd_γ
+      rwa [Int.natAbs_natCast] at this
+    · exact Int.natCast_dvd_natCast.mp ⟨δ₁, hδ₁⟩
   rw [y.reduced] at this
   exact absurd (Nat.le_of_dvd one_pos this) (not_le.mpr hp.one_lt)
 

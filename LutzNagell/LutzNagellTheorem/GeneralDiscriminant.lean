@@ -75,13 +75,12 @@ private lemma kappa_sq_dvd_four_delta_of_coord_identity
   set h_val := 6 * x₀ ^ 2 + W.b₂ * x₀ + W.b₄
   set Ψ₃_val := 3 * x₀ ^ 4 + W.b₂ * x₀ ^ 3 + 3 * W.b₄ * x₀ ^ 2 +
       3 * W.b₆ * x₀ + W.b₈
-  have hdvd_Psi2Sq : κ₀ ^ 2 ∣ Ψ₂Sq_val := ⟨1, by linarith⟩
   have hdvd_h_sq : κ₀ ^ 2 ∣ h_val ^ 2 := by
     have : h_val ^ 2 = (12 * x₀ + W.b₂) * Ψ₂Sq_val - 4 * Ψ₃_val := by
       linarith [h_sq_add_four_prePsi3_eq_general W x₀]
-    rw [this]; exact dvd_sub (dvd_mul_of_dvd_right hdvd_Psi2Sq _) hdvd_prePsi
+    rw [this]; exact dvd_sub (dvd_mul_of_dvd_right ⟨1, by linarith [hkappa]⟩ _) hdvd_prePsi
   rw [← bezout_general W x₀]
-  exact dvd_add (dvd_mul_of_dvd_right hdvd_Psi2Sq _) (dvd_mul_of_dvd_right hdvd_h_sq _)
+  exact dvd_add (dvd_mul_of_dvd_right ⟨1, by linarith [hkappa]⟩ _) (dvd_mul_of_dvd_right hdvd_h_sq _)
 
 /-! ### Helpers for the main theorem -/
 
@@ -91,10 +90,9 @@ private lemma curveZ_equation_of_integral
     {x₀ y₀ : ℤ} (hx : (x₀ : ℚ) = x) (hy : (y₀ : ℚ) = y) :
     y₀ ^ 2 + W.a₁ * x₀ * y₀ + W.a₃ * y₀ =
       x₀ ^ 3 + W.a₂ * x₀ ^ 2 + W.a₄ * x₀ + W.a₆ := by
-  have hQ := (curveQ_equation_iff W x y).mp hpt.left
   have : (y₀ : ℚ) ^ 2 + (W.a₁ : ℚ) * x₀ * y₀ + (W.a₃ : ℚ) * y₀ =
       (x₀ : ℚ) ^ 3 + (W.a₂ : ℚ) * x₀ ^ 2 + (W.a₄ : ℚ) * x₀ + (W.a₆ : ℚ) := by
-    subst hx; subst hy; linarith
+    have hQ := (curveQ_equation_iff W x y).mp hpt.left; subst hx; subst hy; linarith
   exact_mod_cast this
 
 /-- If `κ₀ = 2y₀ + a₁x₀ + a₃ ≠ 0`, then the point does not have order 2. -/
