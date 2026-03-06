@@ -37,5 +37,13 @@ lemma curveQ_equation_iff (x y : ℚ) :
   rw [WeierstrassCurve.Affine.equation_iff]
   simp [curveQ]
 
+/-- A nonzero affine point is of the form `.some hns`. -/
+lemma exists_some_of_ne_zero
+    {Q : (curveQ W).toAffine.Point} (hQ : Q ≠ 0) :
+    ∃ x y (hns : (curveQ W).toAffine.Nonsingular x y), Q = .some hns := by
+  rcases Q with _ | ⟨hns⟩
+  · exact absurd rfl hQ
+  · exact ⟨_, _, hns, rfl⟩
+
 end LutzNagellTheorem
 end LutzNagell

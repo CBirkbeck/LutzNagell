@@ -36,7 +36,7 @@ theorem x_coord_nsmul_eq_general
       Jacobian.Point.fromAffine (Affine.Point.some hns') := by
     have h := congrArg (Jacobian.Point.toAffineAddEquiv (curveQ W)).symm hnP
     simp only [map_zsmul] at h
-    convert h using 1 <;> exact (AddEquiv.symm_apply_apply _ _).symm
+    convert h using 1
   have hsmul := zsmul_eq_smulEval (curveQ W) hns n
   open Jacobian in
   have hequiv : smulEval (curveQ W) x y n ≈ ![x', y', 1] := by

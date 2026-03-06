@@ -85,6 +85,18 @@ private lemma kappa_sq_dvd_four_delta_of_coord_identity
 
 /-! ### Helpers for the main theorem -/
 
+/-- The curve equation over ℤ, derived from integrality of coordinates. -/
+private lemma curveZ_equation_of_integral
+    {x y : ℚ} (hpt : (curveQ W).toAffine.Nonsingular x y)
+    {x₀ y₀ : ℤ} (hx : (x₀ : ℚ) = x) (hy : (y₀ : ℚ) = y) :
+    y₀ ^ 2 + W.a₁ * x₀ * y₀ + W.a₃ * y₀ =
+      x₀ ^ 3 + W.a₂ * x₀ ^ 2 + W.a₄ * x₀ + W.a₆ := by
+  have hQ := (curveQ_equation_iff W x y).mp hpt.left
+  have : (y₀ : ℚ) ^ 2 + (W.a₁ : ℚ) * x₀ * y₀ + (W.a₃ : ℚ) * y₀ =
+      (x₀ : ℚ) ^ 3 + (W.a₂ : ℚ) * x₀ ^ 2 + (W.a₄ : ℚ) * x₀ + (W.a₆ : ℚ) := by
+    subst hx; subst hy; linarith
+  exact_mod_cast this
+
 /-- If `κ₀ = 2y₀ + a₁x₀ + a₃ ≠ 0`, then the point does not have order 2. -/
 private lemma addOrderOf_ne_two_of_kappa_ne_zero
     {x y : ℚ} (hns : (curveQ W).toAffine.Nonsingular x y)
@@ -145,6 +157,70 @@ private lemma Psi3_eval_eq (x : ℚ) :
   simp only [eval₂_add, eval₂_mul, eval₂_C, eval₂_X, eval₂_pow, eval₂_ofNat,
              algebraMap_int_eq, Int.coe_castRingHom]
 
+/-! ### The Ψ₃ divisibility argument -/
+
+/-- The core divisibility: from the coordinate formula for `2•P` and integrality of the
+doubled point, derive `κ₀² | 4·Ψ₃(x₀)`. -/
+private lemma kappa_sq_dvd_four_Psi3
+    {x y : ℚ} (hpt : (curveQ W).toAffine.Nonsingular x y)
+    (htor : IsOfFinAddOrder (Affine.Point.some hpt))
+    {x₀ y₀ : ℤ} (hx : (x₀ : ℚ) = x) (hy : (y₀ : ℚ) = y)
+    {κ₀ : ℤ} (hκ₀ : κ₀ = 2 * y₀ + W.a₁ * x₀ + W.a₃)
+    (hkappa_sq : κ₀ ^ 2 = 4 * x₀ ^ 3 + W.b₂ * x₀ ^ 2 + 2 * W.b₄ * x₀ + W.b₆)
+    (hκ : κ₀ ≠ 0) :
+    κ₀ ^ 2 ∣ 4 * (3 * x₀ ^ 4 + W.b₂ * x₀ ^ 3 +
+      3 * W.b₄ * x₀ ^ 2 + 3 * W.b₆ * x₀ + W.b₈) := by
+  set P := Affine.Point.some hpt
+  have hm_pos := htor.addOrderOf_pos
+  have hord_ne1 : addOrderOf P ≠ 1 :=
+    fun h => Affine.Point.some_ne_zero hpt (AddMonoid.addOrderOf_eq_one_iff.mp h)
+  have hord_ne2 : addOrderOf P ≠ 2 :=
+    addOrderOf_ne_two_of_kappa_ne_zero W hpt hx hy (by rwa [← hκ₀])
+  have hord_gt2 : 2 < addOrderOf P := by omega
+  have h2P_ne : (2 : ℕ) • P ≠ 0 := by
+    intro h
+    exact absurd (Nat.le_of_dvd (by omega) (addOrderOf_dvd_of_nsmul_eq_zero h))
+      (not_le.mpr hord_gt2)
+  obtain ⟨x', y', hns', h2P_eq⟩ := exists_some_of_ne_zero W h2P_ne
+  have h2P_tor : IsOfFinAddOrder (Affine.Point.some hns') := h2P_eq ▸ htor.nsmul
+  have h2P_zsmul : (2 : ℤ) • P = Affine.Point.some hns' := by
+    rw [show (2 : ℤ) = ↑(2 : ℕ) from rfl, natCast_zsmul]; exact h2P_eq
+  have hcoord := x_coord_nsmul_eq_general W hpt
+    (show (2 : ℤ) ≠ 0 by norm_num) hns' h2P_zsmul
+  rw [PsiSq_two_eval_eq] at hcoord
+  rw [Phi2_eval_eq] at hcoord
+  have hPsi3_eq : eval x (curveQ W).Ψ₃ =
+      (x - x') * eval x (curveQ W).Ψ₂Sq := by linarith
+  rw [Psi2Sq_eval_eq, Psi3_eval_eq] at hPsi3_eq
+  have hkappa_sq_Q : (4 * (x₀ : ℚ) ^ 3 + (W.b₂ : ℚ) * (x₀ : ℚ) ^ 2 +
+    2 * (W.b₄ : ℚ) * (x₀ : ℚ) + (W.b₆ : ℚ)) = (κ₀ : ℚ) ^ 2 := by
+    exact_mod_cast hkappa_sq.symm
+  have hPsi3_sub : (3 * (x₀ : ℚ) ^ 4 + (W.b₂ : ℚ) * (x₀ : ℚ) ^ 3 +
+      3 * (W.b₄ : ℚ) * (x₀ : ℚ) ^ 2 + 3 * (W.b₆ : ℚ) * (x₀ : ℚ) + (W.b₈ : ℚ)) =
+    ((x₀ : ℚ) - x') * ((κ₀ : ℚ) ^ 2) := by
+    rw [← hx] at hPsi3_eq; rw [← hkappa_sq_Q]; linarith
+  rcases lutz_nagell_integrality_general W hns' h2P_tor with
+    ⟨⟨x'₀, hx'⟩, _⟩ | ⟨_, h4x', _⟩
+  · have hPsi3_Z : 3 * x₀ ^ 4 + W.b₂ * x₀ ^ 3 + 3 * W.b₄ * x₀ ^ 2 +
+        3 * W.b₆ * x₀ + W.b₈ = κ₀ ^ 2 * (x₀ - x'₀) := by
+      have : (3 * (x₀ : ℚ) ^ 4 + (W.b₂ : ℚ) * x₀ ^ 3 + 3 * (W.b₄ : ℚ) * x₀ ^ 2 +
+          3 * (W.b₆ : ℚ) * x₀ + (W.b₈ : ℚ)) =
+        ((κ₀ : ℚ) ^ 2) * ((x₀ : ℚ) - x'₀) := by rw [← hx'] at hPsi3_sub; linarith
+      exact_mod_cast this
+    exact dvd_mul_of_dvd_right ⟨x₀ - x'₀, hPsi3_Z⟩ 4
+  · obtain ⟨n₀, hn₀⟩ := h4x'
+    have h4x'_eq : 4 * x' = (n₀ : ℚ) := by linarith
+    have h4Psi3_Z : 4 * (3 * x₀ ^ 4 + W.b₂ * x₀ ^ 3 + 3 * W.b₄ * x₀ ^ 2 +
+        3 * W.b₆ * x₀ + W.b₈) = κ₀ ^ 2 * (4 * x₀ - n₀) := by
+      have : 4 * (3 * (x₀ : ℚ) ^ 4 + (W.b₂ : ℚ) * x₀ ^ 3 + 3 * (W.b₄ : ℚ) * x₀ ^ 2 +
+          3 * (W.b₆ : ℚ) * x₀ + (W.b₈ : ℚ)) =
+        ((κ₀ : ℚ) ^ 2) * (4 * (x₀ : ℚ) - (n₀ : ℚ)) := by
+        have : 4 * ((x₀ : ℚ) - x') * ((κ₀ : ℚ) ^ 2) =
+          ((κ₀ : ℚ) ^ 2) * (4 * (x₀ : ℚ) - (n₀ : ℚ)) := by rw [← h4x'_eq]; ring
+        linarith [hPsi3_sub]
+      exact_mod_cast this
+    exact ⟨4 * x₀ - n₀, h4Psi3_Z⟩
+
 /-! ### The main theorem -/
 
 /-- **General discriminant divisibility.** For a nonzero torsion point with integral
@@ -156,93 +232,14 @@ theorem lutz_nagell_discriminant_general
     {x₀ y₀ : ℤ} (hx : (x₀ : ℚ) = x) (hy : (y₀ : ℚ) = y) :
     (2 * y₀ + W.a₁ * x₀ + W.a₃) = 0 ∨
     (2 * y₀ + W.a₁ * x₀ + W.a₃) ^ 2 ∣ 4 * W.Δ := by
-  set κ₀ := 2 * y₀ + W.a₁ * x₀ + W.a₃ with hκ₀_def
+  set κ₀ := 2 * y₀ + W.a₁ * x₀ + W.a₃
   by_cases hκ : κ₀ = 0
   · exact Or.inl hκ
   · right
-    set P := Affine.Point.some hpt with hP_def
-    -- Curve equation in ℤ
-    have hcurve : y₀ ^ 2 + W.a₁ * x₀ * y₀ + W.a₃ * y₀ =
-        x₀ ^ 3 + W.a₂ * x₀ ^ 2 + W.a₄ * x₀ + W.a₆ := by
-      have hQ := (curveQ_equation_iff W x y).mp hpt.left
-      have : (y₀ : ℚ) ^ 2 + (W.a₁ : ℚ) * x₀ * y₀ + (W.a₃ : ℚ) * y₀ =
-          (x₀ : ℚ) ^ 3 + (W.a₂ : ℚ) * x₀ ^ 2 + (W.a₄ : ℚ) * x₀ + (W.a₆ : ℚ) := by
-        subst hx; subst hy; linarith
-      exact_mod_cast this
-    -- κ₀² = Ψ₂Sq(x₀)
-    have hkappa_sq := kappa_sq_eq_Psi2Sq_eval_general W hcurve
-    -- addOrderOf facts
-    have hm_pos := htor.addOrderOf_pos
-    have hord_ne1 : addOrderOf P ≠ 1 :=
-      fun h => Affine.Point.some_ne_zero hpt (AddMonoid.addOrderOf_eq_one_iff.mp h)
-    -- addOrderOf P ≠ 2 (since κ₀ ≠ 0)
-    have hord_ne2 : addOrderOf P ≠ 2 :=
-      addOrderOf_ne_two_of_kappa_ne_zero W hpt hx hy hκ
-    -- 2 < addOrderOf P, hence 2 • P ≠ 0
-    have hord_gt2 : 2 < addOrderOf P := by omega
-    have h2P_ne : (2 : ℕ) • P ≠ 0 := by
-      intro h
-      exact absurd (Nat.le_of_dvd (by omega) (addOrderOf_dvd_of_nsmul_eq_zero h))
-        (not_le.mpr hord_gt2)
-    -- Extract 2 • P as affine point
-    set Q := (2 : ℕ) • P with hQ_def
-    obtain ⟨x', y', hns', h2P_eq⟩ : ∃ x' y',
-        ∃ hns' : (curveQ W).toAffine.Nonsingular x' y',
-        Q = Affine.Point.some hns' := by
-      rcases Q with _ | ⟨hns'⟩
-      · exact absurd rfl h2P_ne
-      · exact ⟨_, _, hns', rfl⟩
-    -- 2 • P is torsion
-    have h2P_tor : IsOfFinAddOrder (Affine.Point.some hns') := h2P_eq ▸ htor.nsmul
-    -- Coordinate formula: x' * ΨSq_2(x) = Φ_2(x)
-    have h2P_zsmul : (2 : ℤ) • P = Affine.Point.some hns' := by
-      rw [show (2 : ℤ) = ↑(2 : ℕ) from rfl, natCast_zsmul, ← hQ_def]; exact h2P_eq
-    have hcoord := x_coord_nsmul_eq_general W hpt
-      (show (2 : ℤ) ≠ 0 by norm_num) hns' h2P_zsmul
-    -- Rewrite the coordinate formula using Φ 2 = x · Ψ₂Sq - Ψ₃ and ΨSq 2 = Ψ₂Sq
-    rw [PsiSq_two_eval_eq] at hcoord
-    rw [Phi2_eval_eq] at hcoord
-    -- So x' * Ψ₂Sq.eval x = x * Ψ₂Sq.eval x - Ψ₃.eval x
-    -- i.e. Ψ₃.eval x = (x - x') * Ψ₂Sq.eval x
-    have hPsi3_eq : eval x (curveQ W).Ψ₃ =
-        (x - x') * eval x (curveQ W).Ψ₂Sq := by linarith
-    -- Substitute numerical evaluations
-    rw [Psi2Sq_eval_eq, Psi3_eval_eq] at hPsi3_eq
-    -- Cast κ₀² = Ψ₂Sq(x₀) to ℚ
-    have hkappa_sq_Q : (4 * (x₀ : ℚ) ^ 3 + (W.b₂ : ℚ) * (x₀ : ℚ) ^ 2 +
-      2 * (W.b₄ : ℚ) * (x₀ : ℚ) + (W.b₆ : ℚ)) = (κ₀ : ℚ) ^ 2 := by
-      exact_mod_cast hkappa_sq.symm
-    -- Ψ₃(x₀) = (x₀ - x') · κ₀²
-    have hPsi3_sub : (3 * (x₀ : ℚ) ^ 4 + (W.b₂ : ℚ) * (x₀ : ℚ) ^ 3 +
-        3 * (W.b₄ : ℚ) * (x₀ : ℚ) ^ 2 + 3 * (W.b₆ : ℚ) * (x₀ : ℚ) + (W.b₈ : ℚ)) =
-      ((x₀ : ℚ) - x') * ((κ₀ : ℚ) ^ 2) := by
-      rw [← hx] at hPsi3_eq; rw [← hkappa_sq_Q]; linarith
-    -- Apply lutz_nagell_integrality_general to 2 • P
-    rcases lutz_nagell_integrality_general W hns' h2P_tor with
-      ⟨⟨x'₀, hx'⟩, _⟩ | ⟨hord2', h4x', _⟩
-    · -- Case A: 2 • P has integral coordinates → κ₀² | Ψ₃(x₀)
-      have hPsi3_Z : 3 * x₀ ^ 4 + W.b₂ * x₀ ^ 3 + 3 * W.b₄ * x₀ ^ 2 +
-          3 * W.b₆ * x₀ + W.b₈ = κ₀ ^ 2 * (x₀ - x'₀) := by
-        have : (3 * (x₀ : ℚ) ^ 4 + (W.b₂ : ℚ) * x₀ ^ 3 + 3 * (W.b₄ : ℚ) * x₀ ^ 2 +
-            3 * (W.b₆ : ℚ) * x₀ + (W.b₈ : ℚ)) =
-          ((κ₀ : ℚ) ^ 2) * ((x₀ : ℚ) - x'₀) := by rw [← hx'] at hPsi3_sub; linarith
-        exact_mod_cast this
-      exact kappa_sq_dvd_four_delta_of_coord_identity W x₀ κ₀ hkappa_sq
-        (dvd_mul_of_dvd_right ⟨x₀ - x'₀, hPsi3_Z⟩ 4)
-    · -- Case B: 2 • P has order 2, 4x' ∈ ℤ → κ₀² | 4·Ψ₃(x₀)
-      obtain ⟨n₀, hn₀⟩ := h4x'
-      have h4x' : 4 * x' = (n₀ : ℚ) := by linarith
-      have h4Psi3_Z : 4 * (3 * x₀ ^ 4 + W.b₂ * x₀ ^ 3 + 3 * W.b₄ * x₀ ^ 2 +
-          3 * W.b₆ * x₀ + W.b₈) = κ₀ ^ 2 * (4 * x₀ - n₀) := by
-        have : 4 * (3 * (x₀ : ℚ) ^ 4 + (W.b₂ : ℚ) * x₀ ^ 3 + 3 * (W.b₄ : ℚ) * x₀ ^ 2 +
-            3 * (W.b₆ : ℚ) * x₀ + (W.b₈ : ℚ)) =
-          ((κ₀ : ℚ) ^ 2) * (4 * (x₀ : ℚ) - (n₀ : ℚ)) := by
-          have : 4 * ((x₀ : ℚ) - x') * ((κ₀ : ℚ) ^ 2) =
-            ((κ₀ : ℚ) ^ 2) * (4 * (x₀ : ℚ) - (n₀ : ℚ)) := by rw [← h4x']; ring
-          linarith [hPsi3_sub]
-        exact_mod_cast this
-      exact kappa_sq_dvd_four_delta_of_coord_identity W x₀ κ₀ hkappa_sq
-        ⟨4 * x₀ - n₀, h4Psi3_Z⟩
+    have hkappa_sq := kappa_sq_eq_Psi2Sq_eval_general W
+      (curveZ_equation_of_integral W hpt hx hy)
+    exact kappa_sq_dvd_four_delta_of_coord_identity W x₀ κ₀ hkappa_sq
+      (kappa_sq_dvd_four_Psi3 W hpt htor hx hy rfl hkappa_sq hκ)
 
 /-- **Combined Lutz–Nagell theorem for general Weierstrass curves.**
 
