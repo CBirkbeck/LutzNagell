@@ -46,9 +46,8 @@ theorem y_integral_of_x_integral_on_general_curve
         rw [degree_add_eq_left_of_degree_lt
           (degree_C_mul_X_le c₁ |>.trans_lt (by norm_num [degree_X_pow]))]
         norm_num [degree_X_pow])
-  have hint := isInteger_of_is_root_of_monic hmonic hroot
-  obtain ⟨y₀, hy₀⟩ := RingHom.mem_rangeS.mp hint
-  exact ⟨y₀, by simp only [algebraMap_int_eq, Int.coe_castRingHom] at hy₀; exact hy₀⟩
+  obtain ⟨y₀, hy₀⟩ := RingHom.mem_rangeS.mp (isInteger_of_is_root_of_monic hmonic hroot)
+  exact ⟨y₀, by simpa only [algebraMap_int_eq, Int.coe_castRingHom] using hy₀⟩
 
 /-! ### Extract ψ = 0 from torsion (general version) -/
 
@@ -88,7 +87,7 @@ theorem x_integral_of_odd_prime_torsion_general
       (Affine.Point.some hns)) = 0) :
     ∃ x₀ : ℤ, (x₀ : ℚ) = x := by
   have hψ := evalEval_ψ_eq_zero_of_zsmul_eq_zero_general W hns (p : ℤ) htors
-  have hodd_int : ¬Even (p : ℤ) := by rw [Int.even_coe_nat, hp.even_iff]; exact hodd
+  have hodd_int : ¬Even (p : ℤ) := by rwa [Int.even_coe_nat, hp.even_iff]
   rw [evalEval_ψ_odd (curveQ W) hns.left (p : ℤ) hodd_int] at hψ
   have hmap : (curveQ W).preΨ (p : ℤ) = (W.preΨ (p : ℤ)).map (algebraMap ℤ ℚ) := by
     change (W.map (algebraMap ℤ ℚ)).preΨ (p : ℤ) = _; rw [WeierstrassCurve.map_preΨ]
@@ -110,7 +109,7 @@ theorem x_integral_of_odd_prime_torsion_general
     · exact h
     · exact absurd h (fun h => den_ne_prime_of_on_general_curve W
         ((curveQ_equation_iff W x y).mp hns.left) hp h)
-  exact ⟨x.num, by rw [← Rat.den_eq_one_iff]; exact hden_one⟩
+  exact ⟨x.num, by rwa [← Rat.den_eq_one_iff]⟩
 
 /-! ### Order-4 torsion: integrality -/
 
@@ -143,12 +142,9 @@ theorem integrality_of_order_four_general
       · exact h
       · exact absurd h (fun h => den_ne_prime_of_on_general_curve W
           ((curveQ_equation_iff W x y).mp hns.left) hp2 h)
-    have hx_int : ∃ x₀ : ℤ, (x₀ : ℚ) = x :=
-      ⟨x.num, by rw [← Rat.den_eq_one_iff]; exact hden_one⟩
-    refine ⟨hx_int, ?_⟩
-    obtain ⟨x₀, hx₀⟩ := hx_int
-    exact y_integral_of_x_integral_on_general_curve W
-      ((curveQ_equation_iff W x y).mp hns.left) hx₀
+    have hx₀ : (x.num : ℚ) = x := by rwa [← Rat.den_eq_one_iff]
+    exact ⟨⟨x.num, hx₀⟩, y_integral_of_x_integral_on_general_curve W
+      ((curveQ_equation_iff W x y).mp hns.left) hx₀⟩
   · -- ψ₂(x,y) = 0 → 2•P = 0, contradiction
     exact absurd (two_nsmul_eq_zero_of_ψ₂_eq_zero W hns hψ₂) h2ne
 
@@ -216,13 +212,11 @@ theorem bounded_den_of_order_two_general
     push_cast
     field_simp
   -- Step 5: 8y ∈ ℤ from 2y = -(a₁x + a₃)
-  have height_y : ∃ m : ℤ, (m : ℚ) = 8 * y := by
-    obtain ⟨n₀, hn₀⟩ := hfour_x
-    refine ⟨-(W.a₁ * n₀) - 4 * W.a₃, ?_⟩
+  obtain ⟨n₀, hn₀⟩ := hfour_x
+  exact ⟨⟨n₀, hn₀⟩, -(W.a₁ * n₀) - 4 * W.a₃, by
     push_cast
     have h_eq : (↑W.a₁ : ℚ) * ↑n₀ = 4 * ↑W.a₁ * x := by rw [hn₀]; ring
-    linarith [h_eq, hψ_num]
-  exact ⟨hfour_x, height_y⟩
+    linarith [h_eq, hψ_num]⟩
 
 end LutzNagellTheorem
 end LutzNagell

@@ -39,21 +39,16 @@ theorem x_coord_nsmul_eq_general
     convert h using 1
   have hsmul := zsmul_eq_smulEval (curveQ W) hns n
   open Jacobian in
-  have hequiv : smulEval (curveQ W) x y n ≈ ![x', y', 1] := by
-    rw [Jacobian.Point.ext_iff] at hJac
-    rw [hsmul] at hJac
-    exact Quotient.exact hJac
-  open Jacobian in
-  have hX := X_eq_of_equiv hequiv
+  have hX := X_eq_of_equiv (show smulEval (curveQ W) x y n ≈ ![x', y', 1] by
+    rw [Jacobian.Point.ext_iff] at hJac; rw [hsmul] at hJac; exact Quotient.exact hJac)
   simp only [smulEval, Function.comp, Matrix.cons_val_zero, Matrix.cons_val_two,
     Matrix.head_cons, Matrix.tail_cons] at hX
   norm_num at hX
   simp only [← algebraMap_int_eq, ← WeierstrassCurve.map_φ,
     ← WeierstrassCurve.map_ψ] at hX
-  have heqn : (curveQ W).toAffine.Equation x y := hns.left
-  rw [evalEval_φ_eq_eval_Φ (curveQ W) heqn n] at hX
-  have hΨSq := evalEval_Ψ_sq_eq_eval_ΨSq (curveQ W) heqn n
-  rw [← evalEval_ψ_eq_evalEval_Ψ (curveQ W) heqn n] at hΨSq
+  rw [evalEval_φ_eq_eval_Φ (curveQ W) hns.left n] at hX
+  have hΨSq := evalEval_Ψ_sq_eq_eval_ΨSq (curveQ W) hns.left n
+  rw [← evalEval_ψ_eq_evalEval_Ψ (curveQ W) hns.left n] at hΨSq
   rw [hΨSq] at hX
   linarith
 
@@ -63,8 +58,7 @@ theorem x_coord_nsmul_eq_general
 theorem monic_Φ_sub_smul_ΨSq_general
     {n : ℤ} (hn : n ≠ 0) (c : ℤ) :
     (W.Φ n - C c * W.ΨSq n).Monic := by
-  have hΦ_monic : (W.Φ n).Monic := leadingCoeff_Φ _ n
-  apply hΦ_monic.sub_of_left
+  apply Polynomial.Monic.sub_of_left (leadingCoeff_Φ _ n)
   apply degree_lt_degree
   calc (C c * W.ΨSq n).natDegree
       _ ≤ (W.ΨSq n).natDegree := natDegree_C_mul_le _ _
@@ -93,10 +87,9 @@ theorem x_integral_of_nsmul_x_integral_general
       ← hΦ_map, ← hΨSq_map]
     simp only [algebraMap_int_eq, Int.coe_castRingHom, eval_sub, eval_mul, eval_C]
     linarith
-  have hmonic := monic_Φ_sub_smul_ΨSq_general W hn c
-  have hint := isInteger_of_is_root_of_monic hmonic hroot
-  obtain ⟨x₀, hx₀⟩ := RingHom.mem_rangeS.mp hint
-  exact ⟨x₀, by simp only [algebraMap_int_eq, Int.coe_castRingHom] at hx₀; exact hx₀⟩
+  obtain ⟨x₀, hx₀⟩ := RingHom.mem_rangeS.mp
+    (isInteger_of_is_root_of_monic (monic_Φ_sub_smul_ΨSq_general W hn c) hroot)
+  exact ⟨x₀, by simpa only [algebraMap_int_eq, Int.coe_castRingHom] using hx₀⟩
 
 /-! ### Main theorem -/
 
@@ -113,8 +106,7 @@ theorem integral_of_nsmul_integral_general
   have hx_int := x_integral_of_nsmul_x_integral_general W hns hn hns' hnP hc
   refine ⟨hx_int, ?_⟩
   obtain ⟨x₀, hx₀⟩ := hx_int
-  have hcurve := (curveQ_equation_iff W x y).mp hns.left
-  exact y_integral_of_x_integral_on_general_curve W hcurve hx₀
+  exact y_integral_of_x_integral_on_general_curve W ((curveQ_equation_iff W x y).mp hns.left) hx₀
 
 end LutzNagellTheorem
 end LutzNagell

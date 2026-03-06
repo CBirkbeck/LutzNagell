@@ -30,9 +30,8 @@ lemma nsmul_eq_zero_affine_to_jac
     {n : ℕ} (h : n • (Affine.Point.some hns) = 0) :
     (n : ℤ) • Jacobian.Point.fromAffine (Affine.Point.some hns) = 0 := by
   rw [natCast_zsmul]
-  have h' := congrArg (Jacobian.Point.toAffineAddEquiv (curveQ W)).symm h
-  simp only [map_nsmul, map_zero] at h'
-  exact h'
+  simpa only [map_nsmul, map_zero] using
+    congrArg (Jacobian.Point.toAffineAddEquiv (curveQ W)).symm h
 
 /-! ### Helper lemmas for the main theorem -/
 
@@ -65,13 +64,12 @@ private lemma integrality_of_odd_prime_factor
   have hpQ : p • (k • P) = 0 := by
     rw [← mul_nsmul, hkp, addOrderOf_nsmul_eq_zero]
   obtain ⟨x', y', hns', hQ_eq⟩ := exists_some_of_ne_zero W hQ_ne
-  have hpQ' : p • (Affine.Point.some hns') = 0 := hQ_eq ▸ hpQ
   have hne_jac : Jacobian.Point.fromAffine (Affine.Point.some hns') ≠ 0 := by
     rw [← map_zero (Jacobian.Point.toAffineAddEquiv (curveQ W)).symm]
     exact (Jacobian.Point.toAffineAddEquiv (curveQ W)).symm.injective.ne
       (Affine.Point.some_ne_zero hns')
   obtain ⟨hx'_int, hy'_int⟩ := prime_order_integrality_general W hns' hp hodd
-    (nsmul_eq_zero_affine_to_jac W hpQ') hne_jac
+    (nsmul_eq_zero_affine_to_jac W (hQ_eq ▸ hpQ)) hne_jac
   exact integral_of_nsmul_integral_general W hpt
     (show (k : ℤ) ≠ 0 by exact_mod_cast hk_pos.ne') hns'
     (show (k : ℤ) • P = Affine.Point.some hns' by rw [natCast_zsmul]; exact hQ_eq)
@@ -98,10 +96,8 @@ private lemma integrality_of_four_dvd_order
     exact absurd (Nat.le_of_dvd (by omega) (addOrderOf_dvd_of_nsmul_eq_zero h))
       (not_le.mpr (by omega))
   obtain ⟨x', y', hns', hQ_eq⟩ := exists_some_of_ne_zero W hQ_ne
-  have h4Q' : 4 • (Affine.Point.some hns') = 0 := hQ_eq ▸ h4Q
-  have h2Q_ne' : (2 : ℕ) • (Affine.Point.some hns') ≠ 0 := hQ_eq ▸ h2Q_ne
   obtain ⟨hx'_int, hy'_int⟩ := integrality_of_order_four_general W hns'
-    (nsmul_eq_zero_affine_to_jac W h4Q') h2Q_ne'
+    (nsmul_eq_zero_affine_to_jac W (hQ_eq ▸ h4Q)) (hQ_eq ▸ h2Q_ne)
   exact integral_of_nsmul_integral_general W hpt
     (show (k : ℤ) ≠ 0 by exact_mod_cast hk_pos.ne') hns'
     (show (k : ℤ) • P = Affine.Point.some hns' by rw [natCast_zsmul]; exact hQ_eq)
@@ -163,8 +159,8 @@ theorem lutz_nagell_integrality_short (A B : ℤ)
   · have h2P : (2 : ℕ) • Affine.Point.some hpt = 0 := by
       convert addOrderOf_nsmul_eq_zero (x := Affine.Point.some hpt) using 2
       exact hord2.symm
-    have h2Jac := nsmul_eq_zero_affine_to_jac (shortCurveZ A B) h2P
-    have hψ₂ := evalEval_ψ_eq_zero_of_zsmul_eq_zero_general (shortCurveZ A B) hpt 2 h2Jac
+    have hψ₂ := evalEval_ψ_eq_zero_of_zsmul_eq_zero_general (shortCurveZ A B) hpt 2
+      (nsmul_eq_zero_affine_to_jac (shortCurveZ A B) h2P)
     rw [WeierstrassCurve.ψ_two, WeierstrassCurve.ψ₂,
         WeierstrassCurve.Affine.evalEval_polynomialY] at hψ₂
     simp only [curveQ_a₁, curveQ_a₃, shortCurveZ_a₁, shortCurveZ_a₃,
@@ -186,9 +182,8 @@ theorem lutz_nagell_integrality_short (A B : ℤ)
           rw [degree_add_eq_left_of_degree_lt
             (degree_C_mul_X_le A |>.trans_lt (by rw [degree_X_pow]; norm_num))]
           rw [degree_X_pow]; norm_num)
-    have hint := isInteger_of_is_root_of_monic hmonic hroot
-    obtain ⟨x₀, hx₀⟩ := RingHom.mem_rangeS.mp hint
-    exact ⟨x₀, by simp only [algebraMap_int_eq, Int.coe_castRingHom] at hx₀; exact hx₀⟩
+    obtain ⟨x₀, hx₀⟩ := RingHom.mem_rangeS.mp (isInteger_of_is_root_of_monic hmonic hroot)
+    exact ⟨x₀, by simpa only [algebraMap_int_eq, Int.coe_castRingHom] using hx₀⟩
 
 end LutzNagellTheorem
 end LutzNagell
