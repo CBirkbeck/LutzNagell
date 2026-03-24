@@ -34,7 +34,7 @@ If `(x, y)` is a nonzero torsion point on the short Weierstrass curve
 `y² = x³ + Ax + B` over `ℚ` with nonzero discriminant, then `x` and `y` are integers. -/
 theorem lutz_nagell_integrality (A B : ℤ) (hΔ : (shortCurveZ A B).Δ ≠ 0)
     {x y : ℚ} (hpt : (shortCurveQ A B).toAffine.Nonsingular x y)
-    (htor : IsOfFinAddOrder (Affine.Point.some hpt)) :
+    (htor : IsOfFinAddOrder (Affine.Point.some _ _ hpt)) :
     (∃ x₀ : ℤ, (x₀ : ℚ) = x) ∧ ∃ y₀ : ℤ, (y₀ : ℚ) = y :=
   lutz_nagell_integrality_short A B hpt htor
 
@@ -47,7 +47,7 @@ Derived from the general discriminant divisibility theorem by specializing
 `κ₀ = 2y₀` (since `a₁ = a₃ = 0`) and observing `4y₀² | 4Δ → y₀² | Δ`. -/
 theorem lutz_nagell_discriminant (A B : ℤ) (hΔ : (shortCurveZ A B).Δ ≠ 0)
     {x y : ℚ} (hpt : (shortCurveQ A B).toAffine.Nonsingular x y)
-    (htor : IsOfFinAddOrder (Affine.Point.some hpt))
+    (htor : IsOfFinAddOrder (Affine.Point.some _ _ hpt))
     {x₀ y₀ : ℤ} (hx : (x₀ : ℚ) = x) (hy : (y₀ : ℚ) = y) :
     y₀ = 0 ∨ y₀ ^ 2 ∣ (shortCurveZ A B).Δ := by
   rcases lutz_nagell_discriminant_general (shortCurveZ A B) hpt htor hx hy with hκ | hdvd
@@ -65,7 +65,7 @@ If `(x, y)` is a nonidentity rational point of finite order on `E`, then there e
 `x₀, y₀ ∈ ℤ` with `x = x₀` and `y = y₀`, and either `y₀ = 0` or `y₀² ∣ Δ_{A,B}`. -/
 theorem lutz_nagell (A B : ℤ) (hΔ : (shortCurveZ A B).Δ ≠ 0)
     {x y : ℚ} (hpt : (shortCurveQ A B).toAffine.Nonsingular x y)
-    (htor : IsOfFinAddOrder (Affine.Point.some hpt)) :
+    (htor : IsOfFinAddOrder (Affine.Point.some _ _ hpt)) :
     ∃ (x₀ y₀ : ℤ), (x₀ : ℚ) = x ∧ (y₀ : ℚ) = y ∧
       (y₀ = 0 ∨ y₀ ^ 2 ∣ (shortCurveZ A B).Δ) := by
   obtain ⟨⟨x₀, hx⟩, ⟨y₀, hy⟩⟩ := lutz_nagell_integrality A B hΔ hpt htor

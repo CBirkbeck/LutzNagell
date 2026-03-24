@@ -57,7 +57,7 @@ namespace WeierstrassCurve.Affine.Point
 variable {R : Type*} [CommRing R] {W' : WeierstrassCurve.Affine R}
 
 lemma some_eq_some_iff {x₁ x₂ y₁ y₂ : R} (h₁ : W'.Nonsingular x₁ y₁)
-    (h₂ : W'.Nonsingular x₂ y₂) : some h₁ = some h₂ ↔ x₁ = x₂ ∧ y₁ = y₂ :=
+    (h₂ : W'.Nonsingular x₂ y₂) : some x₁ y₁ h₁ = some x₂ y₂ h₂ ↔ x₁ = x₂ ∧ y₁ = y₂ :=
   ⟨by rintro (_ | _); trivial, by rintro ⟨rfl, rfl⟩; rfl⟩
 
 end WeierstrassCurve.Affine.Point
@@ -149,7 +149,7 @@ lemma equation_point : pointedCurve.toAffine.Equation (polyToField (C X)) (polyT
 open Polynomial Affine in
 /-- The distinguished point on the universal pointed Weierstrass curve. -/
 def Affine.point : curve⟮Universal.Field⟯ :=
-  .some (equation_iff_nonsingular.mp equation_point)
+  .mk equation_point
 
 /-- The distinguished point on the universal curve in Jacobian coordinates. -/
 def Jacobian.point : Jacobian.Point (curve.baseChange Universal.Field) :=

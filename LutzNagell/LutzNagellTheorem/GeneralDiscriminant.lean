@@ -100,10 +100,10 @@ private lemma addOrderOf_ne_two_of_kappa_ne_zero
     {x y : ℚ} (hns : (curveQ W).toAffine.Nonsingular x y)
     {x₀ y₀ : ℤ} (hx : (x₀ : ℚ) = x) (hy : (y₀ : ℚ) = y)
     (hκ : 2 * y₀ + W.a₁ * x₀ + W.a₃ ≠ 0) :
-    addOrderOf (Affine.Point.some hns) ≠ 2 := by
+    addOrderOf (Affine.Point.some _ _ hns) ≠ 2 := by
   intro h2
-  have h2P : (2 : ℕ) • Affine.Point.some hns = 0 := by
-    convert addOrderOf_nsmul_eq_zero (x := Affine.Point.some hns) using 2; exact h2.symm
+  have h2P : (2 : ℕ) • Affine.Point.some _ _ hns = 0 := by
+    convert addOrderOf_nsmul_eq_zero (x := Affine.Point.some _ _ hns) using 2; exact h2.symm
   have h2Jac := nsmul_eq_zero_affine_to_jac W h2P
   have hψ₂ := evalEval_ψ_eq_zero_of_zsmul_eq_zero_general W hns 2 h2Jac
   rw [WeierstrassCurve.ψ_two, WeierstrassCurve.ψ₂,
@@ -161,14 +161,14 @@ private lemma Psi3_eval_eq (x : ℚ) :
 doubled point, derive `κ₀² | 4·Ψ₃(x₀)`. -/
 private lemma kappa_sq_dvd_four_Psi3
     {x y : ℚ} (hpt : (curveQ W).toAffine.Nonsingular x y)
-    (htor : IsOfFinAddOrder (Affine.Point.some hpt))
+    (htor : IsOfFinAddOrder (Affine.Point.some _ _ hpt))
     {x₀ y₀ : ℤ} (hx : (x₀ : ℚ) = x) (hy : (y₀ : ℚ) = y)
     {κ₀ : ℤ} (hκ₀ : κ₀ = 2 * y₀ + W.a₁ * x₀ + W.a₃)
     (hkappa_sq : κ₀ ^ 2 = 4 * x₀ ^ 3 + W.b₂ * x₀ ^ 2 + 2 * W.b₄ * x₀ + W.b₆)
     (hκ : κ₀ ≠ 0) :
     κ₀ ^ 2 ∣ 4 * (3 * x₀ ^ 4 + W.b₂ * x₀ ^ 3 +
       3 * W.b₄ * x₀ ^ 2 + 3 * W.b₆ * x₀ + W.b₈) := by
-  set P := Affine.Point.some hpt
+  set P := Affine.Point.some _ _ hpt
   have hm_pos := htor.addOrderOf_pos
   have hord_ne1 : addOrderOf P ≠ 1 :=
     fun h => Affine.Point.some_ne_zero hpt (AddMonoid.addOrderOf_eq_one_iff.mp h)
@@ -180,8 +180,8 @@ private lemma kappa_sq_dvd_four_Psi3
     exact absurd (Nat.le_of_dvd (by omega) (addOrderOf_dvd_of_nsmul_eq_zero h))
       (not_le.mpr hord_gt2)
   obtain ⟨x', y', hns', h2P_eq⟩ := exists_some_of_ne_zero W h2P_ne
-  have h2P_tor : IsOfFinAddOrder (Affine.Point.some hns') := h2P_eq ▸ htor.nsmul
-  have h2P_zsmul : (2 : ℤ) • P = Affine.Point.some hns' := by
+  have h2P_tor : IsOfFinAddOrder (Affine.Point.some _ _ hns') := h2P_eq ▸ htor.nsmul
+  have h2P_zsmul : (2 : ℤ) • P = Affine.Point.some _ _ hns' := by
     rw [show (2 : ℤ) = ↑(2 : ℕ) from rfl, natCast_zsmul]; exact h2P_eq
   have hcoord := x_coord_nsmul_eq_general W hpt
     (show (2 : ℤ) ≠ 0 by norm_num) hns' h2P_zsmul
@@ -225,7 +225,7 @@ coordinates on a general Weierstrass curve, either `κ₀ = 0` or `κ₀² | 4Δ
 where `κ₀ = 2y₀ + a₁x₀ + a₃`. -/
 theorem lutz_nagell_discriminant_general
     {x y : ℚ} (hpt : (curveQ W).toAffine.Nonsingular x y)
-    (htor : IsOfFinAddOrder (Affine.Point.some hpt))
+    (htor : IsOfFinAddOrder (Affine.Point.some _ _ hpt))
     {x₀ y₀ : ℤ} (hx : (x₀ : ℚ) = x) (hy : (y₀ : ℚ) = y) :
     (2 * y₀ + W.a₁ * x₀ + W.a₃) = 0 ∨
     (2 * y₀ + W.a₁ * x₀ + W.a₃) ^ 2 ∣ 4 * W.Δ := by
@@ -247,11 +247,11 @@ with `aᵢ ∈ ℤ`, either:
 2. the point has order exactly 2 and `4x, 8y ∈ ℤ`. -/
 theorem lutz_nagell_general
     {x y : ℚ} (hpt : (curveQ W).toAffine.Nonsingular x y)
-    (htor : IsOfFinAddOrder (Affine.Point.some hpt)) :
+    (htor : IsOfFinAddOrder (Affine.Point.some _ _ hpt)) :
     (∃ (x₀ y₀ : ℤ), (x₀ : ℚ) = x ∧ (y₀ : ℚ) = y ∧
       (2 * y₀ + W.a₁ * x₀ + W.a₃ = 0 ∨
        (2 * y₀ + W.a₁ * x₀ + W.a₃) ^ 2 ∣ 4 * W.Δ))
-    ∨ (addOrderOf (Affine.Point.some hpt) = 2 ∧
+    ∨ (addOrderOf (Affine.Point.some _ _ hpt) = 2 ∧
         (∃ n : ℤ, (n : ℚ) = 4 * x) ∧ ∃ m : ℤ, (m : ℚ) = 8 * y) := by
   rcases lutz_nagell_integrality_general W hpt htor with
     ⟨⟨x₀, hx⟩, ⟨y₀, hy⟩⟩ | hord2

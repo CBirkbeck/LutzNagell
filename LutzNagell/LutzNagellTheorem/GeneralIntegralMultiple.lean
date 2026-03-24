@@ -28,12 +28,12 @@ theorem x_coord_nsmul_eq_general
     {x y : ℚ} (hns : (curveQ W).toAffine.Nonsingular x y)
     {n : ℤ} (_hn : n ≠ 0)
     {x' y' : ℚ} (hns' : (curveQ W).toAffine.Nonsingular x' y')
-    (hnP : n • (Affine.Point.some hns) = Affine.Point.some hns') :
+    (hnP : n • (Affine.Point.some _ _ hns) = Affine.Point.some _ _ hns') :
     x' * ((curveQ W).ΨSq n).eval x = ((curveQ W).Φ n).eval x := by
   classical
   open Jacobian in
-  have hJac : n • Jacobian.Point.fromAffine (Affine.Point.some hns) =
-      Jacobian.Point.fromAffine (Affine.Point.some hns') := by
+  have hJac : n • Jacobian.Point.fromAffine (Affine.Point.some _ _ hns) =
+      Jacobian.Point.fromAffine (Affine.Point.some _ _ hns') := by
     have h := congrArg (Jacobian.Point.toAffineAddEquiv (curveQ W)).symm hnP
     simp only [map_zsmul] at h
     convert h using 1
@@ -73,7 +73,7 @@ theorem x_integral_of_nsmul_x_integral_general
     {x y : ℚ} (hns : (curveQ W).toAffine.Nonsingular x y)
     {n : ℤ} (hn : n ≠ 0)
     {x' y' : ℚ} (hns' : (curveQ W).toAffine.Nonsingular x' y')
-    (hnP : n • (Affine.Point.some hns) = Affine.Point.some hns')
+    (hnP : n • (Affine.Point.some _ _ hns) = Affine.Point.some _ _ hns')
     {c : ℤ} (hc : (c : ℚ) = x') :
     ∃ x₀ : ℤ, (x₀ : ℚ) = x := by
   have hcoord := x_coord_nsmul_eq_general W hns hn hns' hnP
@@ -99,7 +99,7 @@ theorem integral_of_nsmul_integral_general
     {x y : ℚ} (hns : (curveQ W).toAffine.Nonsingular x y)
     {n : ℤ} (hn : n ≠ 0)
     {x' y' : ℚ} (hns' : (curveQ W).toAffine.Nonsingular x' y')
-    (hnP : n • (Affine.Point.some hns) = Affine.Point.some hns')
+    (hnP : n • (Affine.Point.some _ _ hns) = Affine.Point.some _ _ hns')
     (hx' : ∃ x₀ : ℤ, (x₀ : ℚ) = x') (_hy' : ∃ y₀ : ℤ, (y₀ : ℚ) = y') :
     (∃ x₀ : ℤ, (x₀ : ℚ) = x) ∧ ∃ y₀ : ℤ, (y₀ : ℚ) = y := by
   obtain ⟨c, hc⟩ := hx'

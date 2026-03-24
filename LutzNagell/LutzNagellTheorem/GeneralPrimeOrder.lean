@@ -55,7 +55,7 @@ theorem y_integral_of_x_integral_on_general_curve
 theorem evalEval_ψ_eq_zero_of_zsmul_eq_zero_general
     {x y : ℚ} (hns : (curveQ W).toAffine.Nonsingular x y) (n : ℤ)
     (htors : n • (Jacobian.Point.fromAffine
-      (Affine.Point.some hns)) = 0) :
+      (Affine.Point.some _ _ hns)) = 0) :
     ((curveQ W).ψ n).evalEval x y = 0 := by
   have heval := zsmul_eq_smulEval (curveQ W) hns n
   have hzero := Jacobian.Point.zero_point (W' := (curveQ W).toJacobian)
@@ -69,7 +69,7 @@ theorem evalEval_ψ_eq_zero_of_zsmul_eq_zero_general
 theorem two_nsmul_eq_zero_of_ψ₂_eq_zero
     {x y : ℚ} (hns : (curveQ W).toAffine.Nonsingular x y)
     (hψ : (curveQ W).ψ₂.evalEval x y = 0) :
-    (2 : ℕ) • (Affine.Point.some hns) = 0 := by
+    (2 : ℕ) • (Affine.Point.some _ _ hns) = 0 := by
   rw [WeierstrassCurve.ψ₂, WeierstrassCurve.Affine.evalEval_polynomialY] at hψ
   have hy : y = (curveQ W).toAffine.negY x y := by
     unfold WeierstrassCurve.Affine.negY; linarith
@@ -84,7 +84,7 @@ theorem x_integral_of_odd_prime_torsion_general
     {x y : ℚ} (hns : (curveQ W).toAffine.Nonsingular x y)
     {p : ℕ} (hp : p.Prime) (hodd : p ≠ 2)
     (htors : (p : ℤ) • (Jacobian.Point.fromAffine
-      (Affine.Point.some hns)) = 0) :
+      (Affine.Point.some _ _ hns)) = 0) :
     ∃ x₀ : ℤ, (x₀ : ℚ) = x := by
   have hψ := evalEval_ψ_eq_zero_of_zsmul_eq_zero_general W hns (p : ℤ) htors
   have hodd_int : ¬Even (p : ℤ) := by rwa [Int.even_coe_nat, hp.even_iff]
@@ -120,8 +120,8 @@ From `ψ₄(P) = 0` and `ψ₄ = C(preΨ₄) * ψ₂`, either `preΨ₄(x) = 0`
 (→ x.den | 2 → x integral) or `ψ₂(P) = 0` (→ 2•P = 0, contradicting hypothesis). -/
 theorem integrality_of_order_four_general
     {x y : ℚ} (hns : (curveQ W).toAffine.Nonsingular x y)
-    (h4 : (4 : ℤ) • (Jacobian.Point.fromAffine (Affine.Point.some hns)) = 0)
-    (h2ne : (2 : ℕ) • (Affine.Point.some hns) ≠ 0) :
+    (h4 : (4 : ℤ) • (Jacobian.Point.fromAffine (Affine.Point.some _ _ hns)) = 0)
+    (h2ne : (2 : ℕ) • (Affine.Point.some _ _ hns) ≠ 0) :
     (∃ x₀ : ℤ, (x₀ : ℚ) = x) ∧ ∃ y₀ : ℤ, (y₀ : ℚ) = y := by
   have hψ₄ := evalEval_ψ_eq_zero_of_zsmul_eq_zero_general W hns 4 h4
   rw [WeierstrassCurve.ψ_four] at hψ₄
@@ -152,8 +152,8 @@ theorem integrality_of_order_four_general
 theorem prime_order_integrality_general
     {x y : ℚ} (hns : (curveQ W).toAffine.Nonsingular x y)
     {p : ℕ} (hp : p.Prime) (hodd : p ≠ 2)
-    (htors : (p : ℤ) • (Jacobian.Point.fromAffine (Affine.Point.some hns)) = 0)
-    (_hne : Jacobian.Point.fromAffine (Affine.Point.some hns) ≠ 0) :
+    (htors : (p : ℤ) • (Jacobian.Point.fromAffine (Affine.Point.some _ _ hns)) = 0)
+    (_hne : Jacobian.Point.fromAffine (Affine.Point.some _ _ hns) ≠ 0) :
     (∃ x₀ : ℤ, (x₀ : ℚ) = x) ∧ ∃ y₀ : ℤ, (y₀ : ℚ) = y := by
   obtain ⟨x₀, hx₀⟩ := x_integral_of_odd_prime_torsion_general W hns hp hodd htors
   exact ⟨⟨x₀, hx₀⟩, y_integral_of_x_integral_on_general_curve W
@@ -169,7 +169,7 @@ From `ψ₂ = 0`: `2y + a₁x + a₃ = 0`. Substituting into the curve equation 
 `x.den | 4`, so `4x ∈ ℤ`. Then `8y = -4(a₁x + a₃) ∈ ℤ`. -/
 theorem bounded_den_of_order_two_general
     {x y : ℚ} (hns : (curveQ W).toAffine.Nonsingular x y)
-    (h2 : (2 : ℤ) • (Jacobian.Point.fromAffine (Affine.Point.some hns)) = 0) :
+    (h2 : (2 : ℤ) • (Jacobian.Point.fromAffine (Affine.Point.some _ _ hns)) = 0) :
     (∃ n : ℤ, (n : ℚ) = 4 * x) ∧ ∃ m : ℤ, (m : ℚ) = 8 * y := by
   have hψ := evalEval_ψ_eq_zero_of_zsmul_eq_zero_general W hns 2 h2
   rw [WeierstrassCurve.ψ_two] at hψ

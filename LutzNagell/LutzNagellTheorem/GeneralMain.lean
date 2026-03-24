@@ -27,8 +27,8 @@ variable (W : WeierstrassCurve ℤ)
 /-- Convert `n • P = 0` on affine points to `(n : ℤ) • P = 0` on Jacobian points. -/
 lemma nsmul_eq_zero_affine_to_jac
     {x y : ℚ} {hns : (curveQ W).toAffine.Nonsingular x y}
-    {n : ℕ} (h : n • (Affine.Point.some hns) = 0) :
-    (n : ℤ) • Jacobian.Point.fromAffine (Affine.Point.some hns) = 0 := by
+    {n : ℕ} (h : n • (Affine.Point.some _ _ hns) = 0) :
+    (n : ℤ) • Jacobian.Point.fromAffine (Affine.Point.some _ _ hns) = 0 := by
   rw [natCast_zsmul]
   simpa only [map_nsmul, map_zero] using
     congrArg (Jacobian.Point.toAffineAddEquiv (curveQ W)).symm h
@@ -38,18 +38,18 @@ lemma nsmul_eq_zero_affine_to_jac
 /-- A nonzero affine point is of the form `.some hns`. -/
 lemma exists_some_of_ne_zero
     {Q : Affine.Point ((curveQ W).toAffine)} (hQ : Q ≠ 0) :
-    ∃ x y, ∃ hns : (curveQ W).toAffine.Nonsingular x y, Q = .some hns := by
-  rcases Q with _ | ⟨hns⟩
+    ∃ x y, ∃ hns : (curveQ W).toAffine.Nonsingular x y, Q = .some _ _ hns := by
+  rcases Q with _ | ⟨_, _, hns⟩
   · exact absurd rfl hQ
   · exact ⟨_, _, hns, rfl⟩
 
 private lemma integrality_of_odd_prime_factor
     {x y : ℚ} (hpt : (curveQ W).toAffine.Nonsingular x y)
     {p : ℕ} (hp : p.Prime) (hodd : p ≠ 2)
-    (hpm : p ∣ addOrderOf (Affine.Point.some hpt))
-    (htor : IsOfFinAddOrder (Affine.Point.some hpt)) :
+    (hpm : p ∣ addOrderOf (Affine.Point.some _ _ hpt))
+    (htor : IsOfFinAddOrder (Affine.Point.some _ _ hpt)) :
     (∃ x₀ : ℤ, (x₀ : ℚ) = x) ∧ ∃ y₀ : ℤ, (y₀ : ℚ) = y := by
-  set P := Affine.Point.some hpt
+  set P := Affine.Point.some _ _ hpt
   have hm_pos := htor.addOrderOf_pos
   set k := addOrderOf P / p
   have hkp : k * p = addOrderOf P := Nat.div_mul_cancel hpm
@@ -64,7 +64,7 @@ private lemma integrality_of_odd_prime_factor
   have hpQ : p • (k • P) = 0 := by
     rw [← mul_nsmul, hkp, addOrderOf_nsmul_eq_zero]
   obtain ⟨x', y', hns', hQ_eq⟩ := exists_some_of_ne_zero W hQ_ne
-  have hne_jac : Jacobian.Point.fromAffine (Affine.Point.some hns') ≠ 0 := by
+  have hne_jac : Jacobian.Point.fromAffine (Affine.Point.some _ _ hns') ≠ 0 := by
     rw [← map_zero (Jacobian.Point.toAffineAddEquiv (curveQ W)).symm]
     exact (Jacobian.Point.toAffineAddEquiv (curveQ W)).symm.injective.ne
       (Affine.Point.some_ne_zero hns')
@@ -72,15 +72,15 @@ private lemma integrality_of_odd_prime_factor
     (nsmul_eq_zero_affine_to_jac W (hQ_eq ▸ hpQ)) hne_jac
   exact integral_of_nsmul_integral_general W hpt
     (show (k : ℤ) ≠ 0 by exact_mod_cast hk_pos.ne') hns'
-    (show (k : ℤ) • P = Affine.Point.some hns' by rw [natCast_zsmul]; exact hQ_eq)
+    (show (k : ℤ) • P = Affine.Point.some _ _ hns' by rw [natCast_zsmul]; exact hQ_eq)
     hx'_int hy'_int
 
 private lemma integrality_of_four_dvd_order
     {x y : ℚ} (hpt : (curveQ W).toAffine.Nonsingular x y)
-    (h4 : 4 ∣ addOrderOf (Affine.Point.some hpt))
-    (htor : IsOfFinAddOrder (Affine.Point.some hpt)) :
+    (h4 : 4 ∣ addOrderOf (Affine.Point.some _ _ hpt))
+    (htor : IsOfFinAddOrder (Affine.Point.some _ _ hpt)) :
     (∃ x₀ : ℤ, (x₀ : ℚ) = x) ∧ ∃ y₀ : ℤ, (y₀ : ℚ) = y := by
-  set P := Affine.Point.some hpt
+  set P := Affine.Point.some _ _ hpt
   have hm_pos := htor.addOrderOf_pos
   set k := addOrderOf P / 4
   have hk4 : k * 4 = addOrderOf P := Nat.div_mul_cancel h4
@@ -100,7 +100,7 @@ private lemma integrality_of_four_dvd_order
     (nsmul_eq_zero_affine_to_jac W (hQ_eq ▸ h4Q)) (hQ_eq ▸ h2Q_ne)
   exact integral_of_nsmul_integral_general W hpt
     (show (k : ℤ) ≠ 0 by exact_mod_cast hk_pos.ne') hns'
-    (show (k : ℤ) • P = Affine.Point.some hns' by rw [natCast_zsmul]; exact hQ_eq)
+    (show (k : ℤ) • P = Affine.Point.some _ _ hns' by rw [natCast_zsmul]; exact hQ_eq)
     hx'_int hy'_int
 
 /-- **Generalized Lutz–Nagell integrality.** For a nonzero finite-order point on a general
@@ -108,11 +108,11 @@ Weierstrass curve with integral coefficients, either the coordinates are integra
 point has order 2 and `4x, 8y ∈ ℤ`. -/
 theorem lutz_nagell_integrality_general
     {x y : ℚ} (hpt : (curveQ W).toAffine.Nonsingular x y)
-    (htor : IsOfFinAddOrder (Affine.Point.some hpt)) :
+    (htor : IsOfFinAddOrder (Affine.Point.some _ _ hpt)) :
     ((∃ x₀ : ℤ, (x₀ : ℚ) = x) ∧ ∃ y₀ : ℤ, (y₀ : ℚ) = y)
-    ∨ (addOrderOf (Affine.Point.some hpt) = 2 ∧
+    ∨ (addOrderOf (Affine.Point.some _ _ hpt) = 2 ∧
         (∃ n : ℤ, (n : ℚ) = 4 * x) ∧ ∃ m : ℤ, (m : ℚ) = 8 * y) := by
-  set P := Affine.Point.some hpt
+  set P := Affine.Point.some _ _ hpt
   have hP_ne : P ≠ 0 := Affine.Point.some_ne_zero hpt
   have hm_ne_one : addOrderOf P ≠ 1 :=
     fun h => hP_ne (AddMonoid.addOrderOf_eq_one_iff.mp h)
@@ -151,13 +151,13 @@ For a nonzero finite-order point on `y² = x³ + Ax + B` with integral coefficie
 the coordinates are integers. -/
 theorem lutz_nagell_integrality_short (A B : ℤ)
     {x y : ℚ} (hpt : (shortCurveQ A B).toAffine.Nonsingular x y)
-    (htor : IsOfFinAddOrder (Affine.Point.some hpt)) :
+    (htor : IsOfFinAddOrder (Affine.Point.some _ _ hpt)) :
     (∃ x₀ : ℤ, (x₀ : ℚ) = x) ∧ ∃ y₀ : ℤ, (y₀ : ℚ) = y := by
   rcases lutz_nagell_integrality_general (shortCurveZ A B) hpt htor with
     ⟨hx, hy⟩ | ⟨hord2, _, _⟩
   · exact ⟨hx, hy⟩
-  · have h2P : (2 : ℕ) • Affine.Point.some hpt = 0 := by
-      convert addOrderOf_nsmul_eq_zero (x := Affine.Point.some hpt) using 2
+  · have h2P : (2 : ℕ) • Affine.Point.some _ _ hpt = 0 := by
+      convert addOrderOf_nsmul_eq_zero (x := Affine.Point.some _ _ hpt) using 2
       exact hord2.symm
     have hψ₂ := evalEval_ψ_eq_zero_of_zsmul_eq_zero_general (shortCurveZ A B) hpt 2
       (nsmul_eq_zero_affine_to_jac (shortCurveZ A B) h2P)

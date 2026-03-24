@@ -342,7 +342,7 @@ instance : AddGroup (curve⟮Universal.Field⟯) := inferInstance
 
 /-- The affine coordinates of `n • Universal.Affine.point` is given by `(smulX n, smulY n)`. -/
 theorem zsmul_point_eq_smulX_smulY : n ≠ 0 →
-    ∃ h : Affine.Nonsingular _ (smulX n) (smulY n), n • Affine.point = .some h := by
+    ∃ h : Affine.Nonsingular _ (smulX n) (smulY n), n • Affine.point = .some _ _ h := by
   induction n using Int.negInduction with
   | nat n =>
     refine n.strong_induction_on fun n ih h0 ↦ ?_
@@ -590,7 +590,7 @@ open Universal
 /-- The integer multiples of a nonsingular rational point `(x,y)` on a Weierstrass curve
 is given by `smulEval` in Jacobian coordinates. -/
 theorem zsmul_eq_smulEval {x y : F} (h : Affine.Nonsingular W x y) (n : ℤ) :
-    (n • Point.fromAffine (Affine.Point.some h)).point = ⟦smulEval W x y n⟧ := by
+    (n • Point.fromAffine (Affine.Point.some _ _ h)).point = ⟦smulEval W x y n⟧ := by
   induction n using Int.negInduction with
   | nat n =>
     refine n.strong_induction_on fun n ih ↦ ?_
@@ -603,8 +603,8 @@ theorem zsmul_eq_smulEval {x y : F} (h : Affine.Nonsingular W x y) (n : ℤ) :
         Point.add_point, ih _ (by omega), addMap_eq, add_self,
         dblXYZ_smulEval h.1]; rfl
     · rw [show 2 * n + 1 + 1 + 1 = (n + 1) + (n + 1 + 1) by omega, Nat.cast_add, add_smul]
-      have hne : (↑(n + 1) : ℤ) • Point.fromAffine (Affine.Point.some h) ≠
-          (↑(n + 1 + 1) : ℤ) • Point.fromAffine (Affine.Point.some h) := by
+      have hne : (↑(n + 1) : ℤ) • Point.fromAffine (Affine.Point.some _ _ h) ≠
+          (↑(n + 1 + 1) : ℤ) • Point.fromAffine (Affine.Point.some _ _ h) := by
         rw [ne_comm, ← sub_ne_zero, ← sub_smul]
         push_cast
         simp only [add_sub_cancel_left, one_smul]
