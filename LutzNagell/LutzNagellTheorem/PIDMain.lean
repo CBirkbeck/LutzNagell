@@ -35,7 +35,7 @@ characteristic zero with fraction field `K`.
 namespace LutzNagell
 namespace PID
 
-open WeierstrassCurve IsFractionRing
+open WeierstrassCurve IsFractionRing Polynomial
 
 variable {R : Type*} [CommRing R] [IsDomain R] [IsPrincipalIdealRing R] [CharZero R]
 variable {K : Type*} [Field K] [DecidableEq K] [Algebra R K] [IsFractionRing R K]
@@ -259,6 +259,203 @@ theorem kappa_sq_dvd_four_Psi3_of_integral {x₀ κ₀ c : R}
       3 * W.b₄ * x₀ ^ 2 + 3 * W.b₆ * x₀ + W.b₈) :=
   dvd_mul_of_dvd_right ⟨c, hPsi3⟩ 4
 
+/-! ### Deriving discriminant divisibility from torsion -/
+
+/-- The curve equation over `R`, derived from nonsingularity and integrality. -/
+private lemma curveR_equation_of_isInteger
+    {x y : K} (hpt : (curveK R K W).toAffine.Nonsingular x y)
+    {x₀ y₀ : R} (hx : algebraMap R K x₀ = x) (hy : algebraMap R K y₀ = y) :
+    y₀ ^ 2 + W.a₁ * x₀ * y₀ + W.a₃ * y₀ =
+      x₀ ^ 3 + W.a₂ * x₀ ^ 2 + W.a₄ * x₀ + W.a₆ := by
+  have hQ := (curveK_equation_iff R K W x y).mp hpt.left
+  rw [← hx, ← hy] at hQ
+  have h : algebraMap R K (y₀ ^ 2 + W.a₁ * x₀ * y₀ + W.a₃ * y₀) =
+      algebraMap R K (x₀ ^ 3 + W.a₂ * x₀ ^ 2 + W.a₄ * x₀ + W.a₆) := by
+    simp only [map_add, map_mul, map_pow]; linear_combination hQ
+  exact IsFractionRing.injective R K h
+
+/-- If `κ₀ = 2y₀ + a₁x₀ + a₃ ≠ 0`, then the point does not have order 2. -/
+private lemma addOrderOf_ne_two_of_kappa_ne_zero
+    {x y : K} (hns : (curveK R K W).toAffine.Nonsingular x y)
+    {x₀ y₀ : R} (hx : algebraMap R K x₀ = x) (hy : algebraMap R K y₀ = y)
+    (hκ : 2 * y₀ + W.a₁ * x₀ + W.a₃ ≠ 0) :
+    addOrderOf (Affine.Point.some _ _ hns) ≠ 2 := by
+  intro h2
+  have h2P : (2 : ℕ) • Affine.Point.some _ _ hns = 0 := by
+    convert addOrderOf_nsmul_eq_zero (x := Affine.Point.some _ _ hns) using 2; exact h2.symm
+  have h2Jac := nsmul_eq_zero_affine_to_jac W h2P
+  have hψ₂ := evalEval_ψ_eq_zero_of_zsmul_eq_zero W hns 2 h2Jac
+  rw [WeierstrassCurve.ψ_two, WeierstrassCurve.ψ₂,
+      WeierstrassCurve.Affine.evalEval_polynomialY] at hψ₂
+  simp only [curveK_a₁, curveK_a₃] at hψ₂
+  apply hκ
+  apply IsFractionRing.injective R K
+  rw [← hx, ← hy] at hψ₂
+  simp only [map_add, map_mul, map_ofNat, map_zero]
+  linear_combination hψ₂
+
+/-! #### Evaluation lemmas for division polynomials over K -/
+
+private lemma Phi2_eval_eq (x : K) :
+    eval x ((curveK R K W).Φ 2) =
+      x * eval x (curveK R K W).Ψ₂Sq - eval x (curveK R K W).Ψ₃ := by
+  conv_lhs =>
+    rw [show (curveK R K W).Φ 2 = X * (curveK R K W).Ψ₂Sq - (curveK R K W).Ψ₃ from by
+      rw [WeierstrassCurve.Φ, WeierstrassCurve.ΨSq_two]
+      simp [even_two, WeierstrassCurve.preΨ_three, WeierstrassCurve.preΨ_one]]
+  simp only [eval_sub, eval_mul, eval_X]
+
+private lemma PsiSq_two_eval_eq (x : K) :
+    eval x ((curveK R K W).ΨSq 2) = eval x (curveK R K W).Ψ₂Sq := by
+  rw [WeierstrassCurve.ΨSq_two]
+
+private lemma Psi2Sq_eval_eq (x : K) :
+    eval x (curveK R K W).Ψ₂Sq =
+      4 * x ^ 3 + algebraMap R K W.b₂ * x ^ 2 +
+      2 * algebraMap R K W.b₄ * x + algebraMap R K W.b₆ := by
+  have hmap : (curveK R K W).Ψ₂Sq = W.Ψ₂Sq.map (algebraMap R K) := by
+    change (W.map (algebraMap R K)).Ψ₂Sq = _; rw [WeierstrassCurve.map_Ψ₂Sq]
+  rw [hmap, eval_map, WeierstrassCurve.Ψ₂Sq]
+  simp only [eval₂_add, eval₂_mul, eval₂_C, eval₂_X, eval₂_pow, eval₂_ofNat, map_ofNat, map_mul]
+
+private lemma Psi3_eval_eq (x : K) :
+    eval x (curveK R K W).Ψ₃ =
+      3 * x ^ 4 + algebraMap R K W.b₂ * x ^ 3 +
+      3 * algebraMap R K W.b₄ * x ^ 2 +
+      3 * algebraMap R K W.b₆ * x + algebraMap R K W.b₈ := by
+  have hmap : (curveK R K W).Ψ₃ = W.Ψ₃.map (algebraMap R K) := by
+    change (W.map (algebraMap R K)).Ψ₃ = _; rw [WeierstrassCurve.map_Ψ₃]
+  rw [hmap, eval_map, WeierstrassCurve.Ψ₃]
+  simp only [eval₂_add, eval₂_mul, eval₂_C, eval₂_X, eval₂_pow, eval₂_ofNat,
+    map_ofNat, map_mul, map_add]
+
+/-- If `(den R x : R) ∣ (n : R)`, then `n * x` is integral. -/
+private lemma isInteger_mul_of_den_dvd {x : K} {n : R}
+    (h : (IsFractionRing.den R x : R) ∣ n) :
+    IsLocalization.IsInteger R (algebraMap R K n * x) := by
+  obtain ⟨q, hq⟩ := h
+  refine ⟨q * IsFractionRing.num R x, ?_⟩
+  have hd_ne : (algebraMap R K (IsFractionRing.den R x : R)) ≠ 0 :=
+    IsFractionRing.to_map_ne_zero_of_mem_nonZeroDivisors (IsFractionRing.den R x).prop
+  have hd_x : algebraMap R K (IsFractionRing.den R x : R) * x =
+      algebraMap R K (IsFractionRing.num R x) := by
+    have h := IsFractionRing.mk'_num_den' R x
+    rw [div_eq_iff hd_ne] at h; rw [mul_comm]; exact h.symm
+  calc algebraMap R K (q * IsFractionRing.num R x)
+      = algebraMap R K q * algebraMap R K (IsFractionRing.num R x) := map_mul ..
+    _ = algebraMap R K q * (algebraMap R K (IsFractionRing.den R x : R) * x) := by rw [hd_x]
+    _ = algebraMap R K n * x := by rw [hq, map_mul]; ring
+
+/-! #### The Ψ₃ divisibility from torsion over PIDs -/
+
+/-- The core divisibility: from the coordinate formula for `2•P` and integrality of the
+doubled point, derive `κ₀² | 4·Ψ₃(x₀)` over a PID. -/
+private lemma kappa_sq_dvd_four_Psi3_of_torsion
+    {x y : K} (hpt : (curveK R K W).toAffine.Nonsingular x y)
+    (htor : IsOfFinAddOrder (Affine.Point.some _ _ hpt))
+    (hsf_all : ∀ p : ℕ, p.Prime → p ∣ addOrderOf (Affine.Point.some _ _ hpt) →
+      Squarefree (p : R))
+    {x₀ y₀ : R} (hx : algebraMap R K x₀ = x) (hy : algebraMap R K y₀ = y)
+    (hkappa_sq : (2 * y₀ + W.a₁ * x₀ + W.a₃) ^ 2 =
+      4 * x₀ ^ 3 + W.b₂ * x₀ ^ 2 + 2 * W.b₄ * x₀ + W.b₆)
+    (hκ : 2 * y₀ + W.a₁ * x₀ + W.a₃ ≠ 0) :
+    (2 * y₀ + W.a₁ * x₀ + W.a₃) ^ 2 ∣
+      4 * (3 * x₀ ^ 4 + W.b₂ * x₀ ^ 3 +
+        3 * W.b₄ * x₀ ^ 2 + 3 * W.b₆ * x₀ + W.b₈) := by
+  set P := Affine.Point.some _ _ hpt
+  set κ₀ := 2 * y₀ + W.a₁ * x₀ + W.a₃
+  have hm_pos := htor.addOrderOf_pos
+  have hord_ne1 : addOrderOf P ≠ 1 :=
+    fun h => Affine.Point.some_ne_zero hpt (AddMonoid.addOrderOf_eq_one_iff.mp h)
+  have hord_ne2 : addOrderOf P ≠ 2 :=
+    addOrderOf_ne_two_of_kappa_ne_zero W hpt hx hy hκ
+  have hord_gt2 : 2 < addOrderOf P := by omega
+  have h2P_ne : (2 : ℕ) • P ≠ 0 := by
+    intro h
+    exact absurd (Nat.le_of_dvd (by omega) (addOrderOf_dvd_of_nsmul_eq_zero h))
+      (not_le.mpr hord_gt2)
+  obtain ⟨x', y', hns', h2P_eq⟩ := exists_some_of_ne_zero W h2P_ne
+  have h2P_tor : IsOfFinAddOrder (Affine.Point.some _ _ hns') := h2P_eq ▸ htor.nsmul
+  have h2P_zsmul : (2 : ℤ) • P = Affine.Point.some _ _ hns' := by
+    rw [show (2 : ℤ) = ↑(2 : ℕ) from rfl, natCast_zsmul]; exact h2P_eq
+  -- Transfer squarefree hypothesis to the doubled point
+  have hsf_2P : ∀ p : ℕ, p.Prime → p ∣ addOrderOf (Affine.Point.some _ _ hns') →
+      Squarefree (p : R) := by
+    intro p hp hpd
+    exact hsf_all p hp (dvd_trans hpd (by
+      rw [← h2P_eq]
+      exact addOrderOf_dvd_of_mem_zmultiples ⟨2, rfl⟩))
+  -- Get the coordinate formula
+  have hcoord := x_coord_nsmul_eq W hpt (show (2 : ℤ) ≠ 0 by norm_num) hns' h2P_zsmul
+  rw [PsiSq_two_eval_eq, Phi2_eval_eq] at hcoord
+  -- hcoord: x' * Ψ₂Sq(x) = x * Ψ₂Sq(x) - Ψ₃(x)
+  -- So Ψ₃(x) = (x - x') * Ψ₂Sq(x)
+  have hPsi3_K : eval x (curveK R K W).Ψ₃ =
+      (x - x') * eval x (curveK R K W).Ψ₂Sq := by linear_combination hcoord
+  -- κ₀² in K equals the Ψ₂Sq evaluation
+  have hkappa_sq_K : (algebraMap R K κ₀) ^ 2 = eval x (curveK R K W).Ψ₂Sq := by
+    rw [Psi2Sq_eval_eq, ← hx]
+    have := congr_arg (algebraMap R K) hkappa_sq
+    simp only [map_add, map_mul, map_pow, map_ofNat] at this
+    linear_combination this
+  -- So Ψ₃(x) = (x - x') * (algebraMap R K κ₀)²
+  have hPsi3_eq : eval x (curveK R K W).Ψ₃ =
+      (x - x') * (algebraMap R K κ₀) ^ 2 := by
+    rw [hPsi3_K, hkappa_sq_K]
+  -- Rewrite Ψ₃ in terms of coordinates
+  rw [Psi3_eval_eq, ← hx] at hPsi3_eq
+  have hinj := IsFractionRing.injective R K
+  -- Case split on integrality of 2•P
+  rcases lutz_nagell_integrality_pid W hns' h2P_tor hsf_2P with
+    ⟨⟨x'₀, hx'₀⟩, _⟩ | ⟨_, hden_dvd⟩
+  · -- Case 1: x' is integral
+    rw [← hx'₀] at hPsi3_eq
+    -- hPsi3_eq: Ψ₃ evaluated at algebraMap x₀ = (algebraMap x₀ - algebraMap x'₀) * (algebraMap κ₀)²
+    have hPsi3_R : 3 * x₀ ^ 4 + W.b₂ * x₀ ^ 3 + 3 * W.b₄ * x₀ ^ 2 +
+        3 * W.b₆ * x₀ + W.b₈ = κ₀ ^ 2 * (x₀ - x'₀) := by
+      apply hinj
+      simp only [map_add, map_mul, map_pow, map_sub, map_ofNat]
+      linear_combination hPsi3_eq
+    exact dvd_mul_of_dvd_right ⟨x₀ - x'₀, hPsi3_R⟩ 4
+  · -- Case 2: order 2 with den(x') ∣ 4
+    obtain ⟨n₀, hn₀⟩ := isInteger_mul_of_den_dvd hden_dvd
+    -- hn₀: algebraMap R K n₀ = algebraMap R K 4 * x'
+    have h4x' : algebraMap R K n₀ = 4 * x' := by
+      rw [hn₀]; simp [map_ofNat]
+    -- Multiply hPsi3_eq by 4 and substitute 4*x' = n₀
+    have h4Psi3_R : 4 * (3 * x₀ ^ 4 + W.b₂ * x₀ ^ 3 + 3 * W.b₄ * x₀ ^ 2 +
+        3 * W.b₆ * x₀ + W.b₈) = κ₀ ^ 2 * (4 * x₀ - n₀) := by
+      apply hinj
+      simp only [map_add, map_mul, map_pow, map_sub, map_ofNat]
+      linear_combination 4 * hPsi3_eq + (algebraMap R K κ₀) ^ 2 * h4x'
+    exact ⟨4 * x₀ - n₀, h4Psi3_R⟩
+
+/-! ### The full discriminant theorem from torsion -/
+
+/-- **Lutz–Nagell discriminant divisibility from torsion over PIDs.**
+
+For a nonzero torsion point with integral coordinates on a general Weierstrass curve
+over a PID, either `κ₀ = 0` or `κ₀² | 4Δ`, where `κ₀ = 2y₀ + a₁x₀ + a₃`.
+
+Unlike the basic `lutz_nagell_pid_discriminant`, this derives the Ψ₃ divisibility
+automatically from the torsion hypothesis. -/
+theorem lutz_nagell_pid_discriminant_of_torsion
+    {x y : K} (hpt : (curveK R K W).toAffine.Nonsingular x y)
+    (htor : IsOfFinAddOrder (Affine.Point.some _ _ hpt))
+    (hsf_all : ∀ p : ℕ, p.Prime → p ∣ addOrderOf (Affine.Point.some _ _ hpt) →
+      Squarefree (p : R))
+    {x₀ y₀ : R} (hx : algebraMap R K x₀ = x) (hy : algebraMap R K y₀ = y) :
+    (2 * y₀ + W.a₁ * x₀ + W.a₃) = 0 ∨
+    (2 * y₀ + W.a₁ * x₀ + W.a₃) ^ 2 ∣ 4 * W.Δ := by
+  by_cases hκ : 2 * y₀ + W.a₁ * x₀ + W.a₃ = 0
+  · exact Or.inl hκ
+  · right
+    have hcurve := curveR_equation_of_isInteger W hpt hx hy
+    exact kappa_sq_dvd_four_delta W x₀ _
+      (kappa_sq_eq_Psi2Sq W hcurve)
+      (kappa_sq_dvd_four_Psi3_of_torsion W hpt htor hsf_all hx hy
+        (kappa_sq_eq_Psi2Sq W hcurve) hκ)
+
 end PID
 
 /-! ## Number field version -/
@@ -312,6 +509,24 @@ theorem den_powerful_number_field
     {q : 𝓞 K} (hq : Prime q) (hqd : q ∣ (IsFractionRing.den (𝓞 K) x : 𝓞 K)) :
     q ^ 2 ∣ (IsFractionRing.den (𝓞 K) x : 𝓞 K) :=
   PID.den_powerful_of_on_curve W heq q hq hqd
+
+/-- **Lutz–Nagell discriminant divisibility for number fields of class number 1.**
+
+For a nonzero torsion point with integral coordinates `x₀, y₀ ∈ 𝓞 K` on a Weierstrass
+curve, define `κ₀ = 2y₀ + a₁x₀ + a₃`. Then either `κ₀ = 0` or `κ₀² ∣ 4Δ`. -/
+theorem lutz_nagell_number_field_discriminant
+    (K : Type*) [Field K] [NumberField K] [DecidableEq K]
+    [IsPrincipalIdealRing (𝓞 K)]
+    (W : WeierstrassCurve (𝓞 K))
+    {x y : K}
+    (hpt : (W.map (algebraMap (𝓞 K) K)).toAffine.Nonsingular x y)
+    (htor : IsOfFinAddOrder (Affine.Point.some _ _ hpt))
+    (hsf_all : ∀ p : ℕ, p.Prime → p ∣ addOrderOf (Affine.Point.some _ _ hpt) →
+      Squarefree (p : 𝓞 K))
+    {x₀ y₀ : 𝓞 K} (hx : algebraMap (𝓞 K) K x₀ = x) (hy : algebraMap (𝓞 K) K y₀ = y) :
+    (2 * y₀ + W.a₁ * x₀ + W.a₃) = 0 ∨
+    (2 * y₀ + W.a₁ * x₀ + W.a₃) ^ 2 ∣ 4 * W.Δ :=
+  PID.lutz_nagell_pid_discriminant_of_torsion W hpt htor hsf_all hx hy
 
 end NumberField
 end LutzNagell
