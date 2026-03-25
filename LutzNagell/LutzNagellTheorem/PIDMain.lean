@@ -414,6 +414,67 @@ theorem lutz_nagell_pid_discriminant_of_torsion
       (kappa_sq_dvd_four_Psi3_of_torsion W hpt htor hsf_all hx hy
         (kappa_sq_eq_Psi2Sq W hcurve) hκ)
 
+/-! ### Short Weierstrass specialization over PIDs -/
+
+/-- For a short Weierstrass curve `y² = x³ + Ax + B` with integral torsion
+point, either `y₀ = 0` or `y₀² ∣ 4A³ + 27B²`. -/
+theorem lutz_nagell_short_discriminant
+    (A B : R) (hW : W = { a₁ := 0, a₂ := 0, a₃ := 0, a₄ := A, a₆ := B })
+    {x y : K} (hpt : (curveK R K W).toAffine.Nonsingular x y)
+    (htor : IsOfFinAddOrder (Affine.Point.some _ _ hpt))
+    (hsf_all : ∀ p : ℕ, p.Prime → p ∣ addOrderOf (Affine.Point.some _ _ hpt) →
+      Squarefree (p : R))
+    {x₀ y₀ : R} (hx : algebraMap R K x₀ = x) (hy : algebraMap R K y₀ = y)
+    (hcurve : y₀ ^ 2 = x₀ ^ 3 + A * x₀ + B) :
+    y₀ = 0 ∨ y₀ ^ 2 ∣ 4 * A ^ 3 + 27 * B ^ 2 := by
+  have ha₁ : W.a₁ = 0 := by rw [hW]
+  have ha₃ : W.a₃ = 0 := by rw [hW]
+  rcases lutz_nagell_pid_discriminant_of_torsion W hpt htor hsf_all hx hy with hκ | hdvd
+  · left; simp only [ha₁, ha₃, mul_zero, add_zero] at hκ
+    exact mul_left_cancel₀ two_ne_zero (by linear_combination hκ)
+  · by_cases hy₀ : y₀ = 0
+    · exact Or.inl hy₀
+    · right
+      simp only [ha₁, ha₃, mul_zero, add_zero,
+        show (2 * y₀) ^ 2 = 4 * y₀ ^ 2 from by ring] at hdvd
+      have hcurve_gen : y₀ ^ 2 + W.a₁ * x₀ * y₀ + W.a₃ * y₀ =
+          x₀ ^ 3 + W.a₂ * x₀ ^ 2 + W.a₄ * x₀ + W.a₆ := by
+        rw [ha₁, ha₃, hW]; simp; linear_combination hcurve
+      have hκ_ne : 2 * y₀ + W.a₁ * x₀ + W.a₃ ≠ 0 := by
+        simp only [ha₁, ha₃, mul_zero, add_zero, zero_mul, zero_add]
+        exact fun h => hy₀ ((mul_eq_zero.mp h).resolve_left two_ne_zero)
+      have h4Psi3 := kappa_sq_dvd_four_Psi3_of_torsion W hpt htor hsf_all hx hy
+        (kappa_sq_eq_Psi2Sq W hcurve_gen) hκ_ne
+      -- From h4Psi3: (2y₀)²|4Ψ₃ where Ψ₃ uses W's b-values
+      -- For short curve: 4Ψ₃ = 4(3x⁴+6Ax²+12Bx-A²) = (2y₀)²·c for some c
+      -- So y₀²|Ψ₃, and (3x₀²+A)² = 12x₀·y₀² - Ψ₃ gives y₀²|(3x₀²+A)²
+      have h_fprime_sq : y₀ ^ 2 ∣ (3 * x₀ ^ 2 + A) ^ 2 := by
+        have hΨ₃ : (2 * y₀ + W.a₁ * x₀ + W.a₃) ^ 2 ∣
+            4 * (3 * x₀ ^ 4 + W.b₂ * x₀ ^ 3 + 3 * W.b₄ * x₀ ^ 2 +
+              3 * W.b₆ * x₀ + W.b₈) := h4Psi3
+        rw [ha₁, ha₃] at hΨ₃
+        simp only [mul_zero, add_zero, zero_mul] at hΨ₃
+        rw [show (2 * y₀) ^ 2 = 4 * y₀ ^ 2 from by ring] at hΨ₃
+        have hΨ₃' : y₀ ^ 2 ∣ 3 * x₀ ^ 4 + W.b₂ * x₀ ^ 3 + 3 * W.b₄ * x₀ ^ 2 +
+            3 * W.b₆ * x₀ + W.b₈ :=
+          (mul_dvd_mul_iff_left (show (4 : R) ≠ 0 from by norm_num)).mp hΨ₃
+        -- (3x₀²+A)² + Ψ₃ = 12x₀·y₀²  (for short curve)
+        have hident : (3 * x₀ ^ 2 + A) ^ 2 =
+            12 * x₀ * (x₀ ^ 3 + A * x₀ + B) -
+            (3 * x₀ ^ 4 + W.b₂ * x₀ ^ 3 + 3 * W.b₄ * x₀ ^ 2 +
+              3 * W.b₆ * x₀ + W.b₈) := by
+          rw [hW]; simp only [WeierstrassCurve.b₂, WeierstrassCurve.b₄,
+            WeierstrassCurve.b₆, WeierstrassCurve.b₈]; ring
+        rw [hident, ← hcurve]
+        exact dvd_sub (dvd_mul_of_dvd_right dvd_rfl _) hΨ₃'
+      have hbez : 4 * A ^ 3 + 27 * B ^ 2 =
+          -27 * (x₀ ^ 3 + A * x₀ - B) * y₀ ^ 2 +
+          (3 * x₀ ^ 2 + 4 * A) * (3 * x₀ ^ 2 + A) ^ 2 := by
+        rw [hcurve]; ring
+      rw [hbez]
+      exact dvd_add (dvd_mul_of_dvd_right dvd_rfl _)
+        (dvd_mul_of_dvd_right h_fprime_sq _)
+
 end PID
 
 /-! ## Number field version -/
@@ -486,6 +547,27 @@ theorem lutz_nagell_number_field_discriminant
     (2 * y₀ + W.a₁ * x₀ + W.a₃) = 0 ∨
     (2 * y₀ + W.a₁ * x₀ + W.a₃) ^ 2 ∣ 4 * W.Δ :=
   PID.lutz_nagell_pid_discriminant_of_torsion W hpt htor hsf_all hx hy
+
+/-! ### Short Weierstrass: y₀² ∣ 4A³ + 27B² -/
+
+/-- For a short Weierstrass curve `y² = x³ + Ax + B` over a number field of
+class number 1, if `(x₀, y₀)` is a nonzero torsion point with integral
+coordinates, then `y₀ = 0` or `y₀² ∣ 4A³ + 27B²`. -/
+theorem lutz_nagell_number_field_short_discriminant
+    (K : Type*) [Field K] [NumberField K] [DecidableEq K]
+    [IsPrincipalIdealRing (𝓞 K)] (A B : 𝓞 K)
+    (W : WeierstrassCurve (𝓞 K))
+    (hW : W = { a₁ := 0, a₂ := 0, a₃ := 0, a₄ := A, a₆ := B })
+    {x y : K}
+    (hpt : (W.map (algebraMap (𝓞 K) K)).toAffine.Nonsingular x y)
+    (htor : IsOfFinAddOrder (Affine.Point.some _ _ hpt))
+    (hsf_all : ∀ p : ℕ, p.Prime → p ∣ addOrderOf (Affine.Point.some _ _ hpt) →
+      Squarefree (p : 𝓞 K))
+    {x₀ y₀ : 𝓞 K} (hx : algebraMap (𝓞 K) K x₀ = x)
+    (hy : algebraMap (𝓞 K) K y₀ = y)
+    (hcurve : y₀ ^ 2 = x₀ ^ 3 + A * x₀ + B) :
+    y₀ = 0 ∨ y₀ ^ 2 ∣ 4 * A ^ 3 + 27 * B ^ 2 :=
+  PID.lutz_nagell_short_discriminant W A B hW hpt htor hsf_all hx hy hcurve
 
 end NumberField
 end LutzNagell
