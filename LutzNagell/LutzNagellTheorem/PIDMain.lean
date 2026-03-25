@@ -43,18 +43,21 @@ variable (W : WeierstrassCurve R)
 
 /-! ### Helper lemmas -/
 
+omit [IsDomain R] [IsPrincipalIdealRing R] [CharZero R] [IsFractionRing R K] in
 /-- Convert `n • P = 0` on affine points to `(n : ℤ) • P = 0` on Jacobian points. -/
-lemma nsmul_eq_zero_affine_to_jac
-    {x y : K} {hns : (curveK R K W).toAffine.Nonsingular x y}
-    {n : ℕ} (h : n • (Affine.Point.some _ _ hns) = 0) :
+lemma nsmul_eq_zero_affine_to_jac {x y : K}
+    {hns : (curveK R K W).toAffine.Nonsingular x y} {n : ℕ}
+    (h : n • (Affine.Point.some _ _ hns) = 0) :
     (n : ℤ) • Jacobian.Point.fromAffine (Affine.Point.some _ _ hns) = 0 := by
   rw [natCast_zsmul]
   simpa only [map_nsmul, map_zero] using
     congrArg (Jacobian.Point.toAffineAddEquiv (curveK R K W)).symm h
 
+omit [IsDomain R] [IsPrincipalIdealRing R] [CharZero R] [DecidableEq K]
+    [IsFractionRing R K] in
 /-- A nonzero affine point is of the form `.some hns`. -/
-lemma exists_some_of_ne_zero
-    {Q : Affine.Point ((curveK R K W).toAffine)} (hQ : Q ≠ 0) :
+lemma exists_some_of_ne_zero {Q : Affine.Point ((curveK R K W).toAffine)}
+    (hQ : Q ≠ 0) :
     ∃ x y, ∃ hns : (curveK R K W).toAffine.Nonsingular x y, Q = .some _ _ hns := by
   rcases Q with _ | ⟨_, _, hns⟩
   · exact absurd rfl hQ
@@ -62,35 +65,26 @@ lemma exists_some_of_ne_zero
 
 /-! ### The powerful denominator theorem (no torsion hypothesis needed) -/
 
-/-- **Every prime factor of `den_R(x)` on a curve point has multiplicity ≥ 2.**
-
-This is the "Option B" result: without any squarefree or torsion hypothesis, the
-denominator of any curve point has no "simple" prime factors. In particular,
-denominators are only supported at primes `q` where `q²` divides the denominator.
-
-For number fields, this means denominators live only at ramified primes. -/
-theorem den_powerful_of_on_curve
-    {x y : K}
+omit [CharZero R] [DecidableEq K] in
+/-- Every prime factor of `den_R(x)` on a curve point has multiplicity at least 2. -/
+theorem den_powerful_of_on_curve {x y : K}
     (heq : y ^ 2 + algebraMap R K W.a₁ * x * y + algebraMap R K W.a₃ * y =
       x ^ 3 + algebraMap R K W.a₂ * x ^ 2 + algebraMap R K W.a₄ * x + algebraMap R K W.a₆) :
     ∀ q : R, Prime q → q ∣ (IsFractionRing.den R x : R) →
       q ^ 2 ∣ (IsFractionRing.den R x : R) :=
-  fun q hq hqd => by_contra fun h => den_no_simple_prime_factor_of_on_curve W heq hq hqd h
+  fun _ hq hqd => by_contra fun h => den_no_simple_prime_factor_of_on_curve W heq hq hqd h
 
 /-! ### Odd prime factor case -/
 
-private lemma integrality_of_odd_prime_factor
-    {x y : K} (hpt : (curveK R K W).toAffine.Nonsingular x y)
-    {p : ℕ} (hp : p.Prime) (hodd : p ≠ 2)
+private lemma integrality_of_odd_prime_factor {x y : K}
+    (hpt : (curveK R K W).toAffine.Nonsingular x y) {p : ℕ} (hp : p.Prime) (hodd : p ≠ 2)
     (hpm : p ∣ addOrderOf (Affine.Point.some _ _ hpt))
-    (htor : IsOfFinAddOrder (Affine.Point.some _ _ hpt))
-    (hsf : Squarefree (p : R)) :
+    (htor : IsOfFinAddOrder (Affine.Point.some _ _ hpt)) (hsf : Squarefree (p : R)) :
     (IsLocalization.IsInteger R x) ∧ IsLocalization.IsInteger R y := by
   set P := Affine.Point.some _ _ hpt
-  have hm_pos := htor.addOrderOf_pos
   set k := addOrderOf P / p
   have hkp : k * p = addOrderOf P := Nat.div_mul_cancel hpm
-  have hk_pos : 0 < k := Nat.div_pos (Nat.le_of_dvd hm_pos hpm) hp.pos
+  have hk_pos : 0 < k := Nat.div_pos (Nat.le_of_dvd htor.addOrderOf_pos hpm) hp.pos
   have hQ_ne : k • P ≠ 0 := by
     intro h
     exact absurd (Nat.le_of_dvd hk_pos (addOrderOf_dvd_of_nsmul_eq_zero h))
@@ -98,41 +92,31 @@ private lemma integrality_of_odd_prime_factor
         calc k = k * 1 := (mul_one k).symm
           _ < k * p := Nat.mul_lt_mul_of_pos_left hp.one_lt hk_pos
           _ = addOrderOf P := hkp))
-  have hpQ : p • (k • P) = 0 := by
-    rw [← mul_nsmul, hkp, addOrderOf_nsmul_eq_zero]
+  have hpQ : p • (k • P) = 0 := by rw [← mul_nsmul, hkp, addOrderOf_nsmul_eq_zero]
   obtain ⟨x', y', hns', hQ_eq⟩ := exists_some_of_ne_zero W hQ_ne
-  have hne_jac : Jacobian.Point.fromAffine (Affine.Point.some _ _ hns') ≠ 0 := by
-    rw [← map_zero (Jacobian.Point.toAffineAddEquiv (curveK R K W)).symm]
-    exact (Jacobian.Point.toAffineAddEquiv (curveK R K W)).symm.injective.ne
-      (Affine.Point.some_ne_zero hns')
   obtain ⟨hx'_int, hy'_int⟩ := prime_order_integrality_squarefree W hns' hp hodd
     (nsmul_eq_zero_affine_to_jac W (hQ_eq ▸ hpQ)) hsf
-  have hk_ne : (k : ℤ) ≠ 0 := Int.natCast_ne_zero.mpr hk_pos.ne'
-  have hk_R_ne : ((k : ℤ) : R) ≠ 0 := by
-    rw [Int.cast_natCast]; exact Nat.cast_ne_zero.mpr hk_pos.ne'
-  exact isInteger_of_nsmul_isInteger W hpt hk_ne hk_R_ne hns'
+  exact isInteger_of_nsmul_isInteger W hpt (Int.natCast_ne_zero.mpr hk_pos.ne')
+    (by rw [Int.cast_natCast]; exact Nat.cast_ne_zero.mpr hk_pos.ne') hns'
     (show (k : ℤ) • P = Affine.Point.some _ _ hns' by rw [natCast_zsmul]; exact hQ_eq)
     hx'_int hy'_int
 
 /-! ### Four divides order case -/
 
-private lemma integrality_of_four_dvd_order
-    {x y : K} (hpt : (curveK R K W).toAffine.Nonsingular x y)
+private lemma integrality_of_four_dvd_order {x y : K}
+    (hpt : (curveK R K W).toAffine.Nonsingular x y)
     (h4 : 4 ∣ addOrderOf (Affine.Point.some _ _ hpt))
-    (htor : IsOfFinAddOrder (Affine.Point.some _ _ hpt))
-    (hsf2 : Squarefree (2 : R)) :
+    (htor : IsOfFinAddOrder (Affine.Point.some _ _ hpt)) (hsf2 : Squarefree (2 : R)) :
     (IsLocalization.IsInteger R x) ∧ IsLocalization.IsInteger R y := by
   set P := Affine.Point.some _ _ hpt
-  have hm_pos := htor.addOrderOf_pos
   set k := addOrderOf P / 4
   have hk4 : k * 4 = addOrderOf P := Nat.div_mul_cancel h4
-  have hk_pos : 0 < k := Nat.div_pos (Nat.le_of_dvd hm_pos h4) (by norm_num)
+  have hk_pos : 0 < k := Nat.div_pos (Nat.le_of_dvd htor.addOrderOf_pos h4) (by norm_num)
   have hQ_ne : k • P ≠ 0 := by
     intro h
     exact absurd (Nat.le_of_dvd hk_pos (addOrderOf_dvd_of_nsmul_eq_zero h))
       (not_le.mpr (by omega))
-  have h4Q : 4 • (k • P) = 0 := by
-    rw [← mul_nsmul, hk4, addOrderOf_nsmul_eq_zero]
+  have h4Q : 4 • (k • P) = 0 := by rw [← mul_nsmul, hk4, addOrderOf_nsmul_eq_zero]
   have h2Q_ne : (2 : ℕ) • (k • P) ≠ 0 := by
     intro h; rw [← mul_nsmul] at h
     exact absurd (Nat.le_of_dvd (by omega) (addOrderOf_dvd_of_nsmul_eq_zero h))
@@ -140,10 +124,8 @@ private lemma integrality_of_four_dvd_order
   obtain ⟨x', y', hns', hQ_eq⟩ := exists_some_of_ne_zero W hQ_ne
   obtain ⟨hx'_int, hy'_int⟩ := integrality_of_order_four_squarefree W hns'
     (nsmul_eq_zero_affine_to_jac W (hQ_eq ▸ h4Q)) (hQ_eq ▸ h2Q_ne) hsf2
-  have hk_ne : (k : ℤ) ≠ 0 := Int.natCast_ne_zero.mpr hk_pos.ne'
-  have hk_R_ne : ((k : ℤ) : R) ≠ 0 := by
-    rw [Int.cast_natCast]; exact Nat.cast_ne_zero.mpr hk_pos.ne'
-  exact isInteger_of_nsmul_isInteger W hpt hk_ne hk_R_ne hns'
+  exact isInteger_of_nsmul_isInteger W hpt (Int.natCast_ne_zero.mpr hk_pos.ne')
+    (by rw [Int.cast_natCast]; exact Nat.cast_ne_zero.mpr hk_pos.ne') hns'
     (show (k : ℤ) • P = Affine.Point.some _ _ hns' by rw [natCast_zsmul]; exact hQ_eq)
     hx'_int hy'_int
 
@@ -194,6 +176,7 @@ theorem lutz_nagell_integrality_pid
 
 /-! ### Discriminant divisibility -/
 
+omit [IsDomain R] [IsPrincipalIdealRing R] [CharZero R] in
 private lemma kappa_sq_eq_Psi2Sq {x₀ y₀ : R}
     (hcurve : y₀ ^ 2 + W.a₁ * x₀ * y₀ + W.a₃ * y₀ =
       x₀ ^ 3 + W.a₂ * x₀ ^ 2 + W.a₄ * x₀ + W.a₆) :
@@ -202,6 +185,7 @@ private lemma kappa_sq_eq_Psi2Sq {x₀ y₀ : R}
   simp only [WeierstrassCurve.b₂, WeierstrassCurve.b₄, WeierstrassCurve.b₆]
   linear_combination 4 * hcurve
 
+omit [IsDomain R] [IsPrincipalIdealRing R] [CharZero R] in
 private lemma bezout_identity (x₀ : R) :
     (432 * x₀ ^ 3 + 108 * W.b₂ * x₀ ^ 2 + 216 * W.b₄ * x₀ +
       (-W.b₂ ^ 3 + 36 * W.b₂ * W.b₄ - 108 * W.b₆)) *
@@ -211,6 +195,7 @@ private lemma bezout_identity (x₀ : R) :
   simp only [WeierstrassCurve.b₂, WeierstrassCurve.b₄,
              WeierstrassCurve.b₆, WeierstrassCurve.b₈, WeierstrassCurve.Δ]; ring
 
+omit [IsDomain R] [IsPrincipalIdealRing R] [CharZero R] in
 private lemma kappa_sq_dvd_four_delta (x₀ κ₀ : R)
     (hkappa : κ₀ ^ 2 = 4 * x₀ ^ 3 + W.b₂ * x₀ ^ 2 + 2 * W.b₄ * x₀ + W.b₆)
     (hdvd_Psi3 : κ₀ ^ 2 ∣ 4 * (3 * x₀ ^ 4 + W.b₂ * x₀ ^ 3 +
@@ -233,6 +218,7 @@ private lemma kappa_sq_dvd_four_delta (x₀ κ₀ : R)
   exact dvd_add (dvd_mul_of_dvd_right ⟨1, by rw [mul_one]; exact hkappa.symm⟩ _)
     (dvd_mul_of_dvd_right hdvd_h_sq _)
 
+omit [IsDomain R] [IsPrincipalIdealRing R] [CharZero R] in
 /-- **Lutz–Nagell discriminant divisibility over PIDs.**
 
 For integral coordinates on the curve satisfying `κ₀² ∣ 4·Ψ₃(x₀)`,
@@ -251,6 +237,7 @@ theorem lutz_nagell_pid_discriminant
   · exact Or.inl hκ
   · exact Or.inr (kappa_sq_dvd_four_delta W x₀ _ (kappa_sq_eq_Psi2Sq W hcurve) hdvd_Psi3)
 
+omit [IsDomain R] [IsPrincipalIdealRing R] [CharZero R] in
 /-- Ψ₃ divisibility from `Ψ₃(x₀) = κ₀² · c`. -/
 theorem kappa_sq_dvd_four_Psi3_of_integral {x₀ κ₀ c : R}
     (hPsi3 : 3 * x₀ ^ 4 + W.b₂ * x₀ ^ 3 + 3 * W.b₄ * x₀ ^ 2 +
@@ -261,7 +248,7 @@ theorem kappa_sq_dvd_four_Psi3_of_integral {x₀ κ₀ c : R}
 
 /-! ### Deriving discriminant divisibility from torsion -/
 
-/-- The curve equation over `R`, derived from nonsingularity and integrality. -/
+omit [IsDomain R] [IsPrincipalIdealRing R] [CharZero R] [DecidableEq K] in
 private lemma curveR_equation_of_isInteger
     {x y : K} (hpt : (curveK R K W).toAffine.Nonsingular x y)
     {x₀ y₀ : R} (hx : algebraMap R K x₀ = x) (hy : algebraMap R K y₀ = y) :
@@ -274,7 +261,7 @@ private lemma curveR_equation_of_isInteger
     simp only [map_add, map_mul, map_pow]; linear_combination hQ
   exact IsFractionRing.injective R K h
 
-/-- If `κ₀ = 2y₀ + a₁x₀ + a₃ ≠ 0`, then the point does not have order 2. -/
+omit [CharZero R] in
 private lemma addOrderOf_ne_two_of_kappa_ne_zero
     {x y : K} (hns : (curveK R K W).toAffine.Nonsingular x y)
     {x₀ y₀ : R} (hx : algebraMap R K x₀ = x) (hy : algebraMap R K y₀ = y)
@@ -296,6 +283,7 @@ private lemma addOrderOf_ne_two_of_kappa_ne_zero
 
 /-! #### Evaluation lemmas for division polynomials over K -/
 
+omit [IsDomain R] [IsPrincipalIdealRing R] [CharZero R] [DecidableEq K] [IsFractionRing R K] in
 private lemma Phi2_eval_eq (x : K) :
     eval x ((curveK R K W).Φ 2) =
       x * eval x (curveK R K W).Ψ₂Sq - eval x (curveK R K W).Ψ₃ := by
@@ -305,10 +293,12 @@ private lemma Phi2_eval_eq (x : K) :
       simp [even_two, WeierstrassCurve.preΨ_three, WeierstrassCurve.preΨ_one]]
   simp only [eval_sub, eval_mul, eval_X]
 
+omit [IsDomain R] [IsPrincipalIdealRing R] [CharZero R] [DecidableEq K] [IsFractionRing R K] in
 private lemma PsiSq_two_eval_eq (x : K) :
     eval x ((curveK R K W).ΨSq 2) = eval x (curveK R K W).Ψ₂Sq := by
   rw [WeierstrassCurve.ΨSq_two]
 
+omit [IsDomain R] [IsPrincipalIdealRing R] [CharZero R] [DecidableEq K] [IsFractionRing R K] in
 private lemma Psi2Sq_eval_eq (x : K) :
     eval x (curveK R K W).Ψ₂Sq =
       4 * x ^ 3 + algebraMap R K W.b₂ * x ^ 2 +
@@ -318,6 +308,7 @@ private lemma Psi2Sq_eval_eq (x : K) :
   rw [hmap, eval_map, WeierstrassCurve.Ψ₂Sq]
   simp only [eval₂_add, eval₂_mul, eval₂_C, eval₂_X, eval₂_pow, eval₂_ofNat, map_ofNat, map_mul]
 
+omit [IsDomain R] [IsPrincipalIdealRing R] [CharZero R] [DecidableEq K] [IsFractionRing R K] in
 private lemma Psi3_eval_eq (x : K) :
     eval x (curveK R K W).Ψ₃ =
       3 * x ^ 4 + algebraMap R K W.b₂ * x ^ 3 +
@@ -326,10 +317,9 @@ private lemma Psi3_eval_eq (x : K) :
   have hmap : (curveK R K W).Ψ₃ = W.Ψ₃.map (algebraMap R K) := by
     change (W.map (algebraMap R K)).Ψ₃ = _; rw [WeierstrassCurve.map_Ψ₃]
   rw [hmap, eval_map, WeierstrassCurve.Ψ₃]
-  simp only [eval₂_add, eval₂_mul, eval₂_C, eval₂_X, eval₂_pow, eval₂_ofNat,
-    map_ofNat, map_mul, map_add]
+  simp only [eval₂_add, eval₂_mul, eval₂_C, eval₂_X, eval₂_pow, eval₂_ofNat]
 
-/-- If `(den R x : R) ∣ (n : R)`, then `n * x` is integral. -/
+omit [DecidableEq K] in
 private lemma isInteger_mul_of_den_dvd {x : K} {n : R}
     (h : (IsFractionRing.den R x : R) ∣ n) :
     IsLocalization.IsInteger R (algebraMap R K n * x) := by
@@ -378,51 +368,36 @@ private lemma kappa_sq_dvd_four_Psi3_of_torsion
   have h2P_tor : IsOfFinAddOrder (Affine.Point.some _ _ hns') := h2P_eq ▸ htor.nsmul
   have h2P_zsmul : (2 : ℤ) • P = Affine.Point.some _ _ hns' := by
     rw [show (2 : ℤ) = ↑(2 : ℕ) from rfl, natCast_zsmul]; exact h2P_eq
-  -- Transfer squarefree hypothesis to the doubled point
   have hsf_2P : ∀ p : ℕ, p.Prime → p ∣ addOrderOf (Affine.Point.some _ _ hns') →
       Squarefree (p : R) := by
     intro p hp hpd
     exact hsf_all p hp (dvd_trans hpd (by
       rw [← h2P_eq]
       exact addOrderOf_dvd_of_mem_zmultiples ⟨2, rfl⟩))
-  -- Get the coordinate formula
   have hcoord := x_coord_nsmul_eq W hpt (show (2 : ℤ) ≠ 0 by norm_num) hns' h2P_zsmul
   rw [PsiSq_two_eval_eq, Phi2_eval_eq] at hcoord
-  -- hcoord: x' * Ψ₂Sq(x) = x * Ψ₂Sq(x) - Ψ₃(x)
-  -- So Ψ₃(x) = (x - x') * Ψ₂Sq(x)
   have hPsi3_K : eval x (curveK R K W).Ψ₃ =
       (x - x') * eval x (curveK R K W).Ψ₂Sq := by linear_combination hcoord
-  -- κ₀² in K equals the Ψ₂Sq evaluation
   have hkappa_sq_K : (algebraMap R K κ₀) ^ 2 = eval x (curveK R K W).Ψ₂Sq := by
     rw [Psi2Sq_eval_eq, ← hx]
     have := congr_arg (algebraMap R K) hkappa_sq
     simp only [map_add, map_mul, map_pow, map_ofNat] at this
     linear_combination this
-  -- So Ψ₃(x) = (x - x') * (algebraMap R K κ₀)²
   have hPsi3_eq : eval x (curveK R K W).Ψ₃ =
-      (x - x') * (algebraMap R K κ₀) ^ 2 := by
-    rw [hPsi3_K, hkappa_sq_K]
-  -- Rewrite Ψ₃ in terms of coordinates
+      (x - x') * (algebraMap R K κ₀) ^ 2 := by rw [hPsi3_K, hkappa_sq_K]
   rw [Psi3_eval_eq, ← hx] at hPsi3_eq
   have hinj := IsFractionRing.injective R K
-  -- Case split on integrality of 2•P
   rcases lutz_nagell_integrality_pid W hns' h2P_tor hsf_2P with
     ⟨⟨x'₀, hx'₀⟩, _⟩ | ⟨_, hden_dvd⟩
-  · -- Case 1: x' is integral
-    rw [← hx'₀] at hPsi3_eq
-    -- hPsi3_eq: Ψ₃ evaluated at algebraMap x₀ = (algebraMap x₀ - algebraMap x'₀) * (algebraMap κ₀)²
+  · rw [← hx'₀] at hPsi3_eq
     have hPsi3_R : 3 * x₀ ^ 4 + W.b₂ * x₀ ^ 3 + 3 * W.b₄ * x₀ ^ 2 +
         3 * W.b₆ * x₀ + W.b₈ = κ₀ ^ 2 * (x₀ - x'₀) := by
       apply hinj
       simp only [map_add, map_mul, map_pow, map_sub, map_ofNat]
       linear_combination hPsi3_eq
     exact dvd_mul_of_dvd_right ⟨x₀ - x'₀, hPsi3_R⟩ 4
-  · -- Case 2: order 2 with den(x') ∣ 4
-    obtain ⟨n₀, hn₀⟩ := isInteger_mul_of_den_dvd hden_dvd
-    -- hn₀: algebraMap R K n₀ = algebraMap R K 4 * x'
-    have h4x' : algebraMap R K n₀ = 4 * x' := by
-      rw [hn₀]; simp [map_ofNat]
-    -- Multiply hPsi3_eq by 4 and substitute 4*x' = n₀
+  · obtain ⟨n₀, hn₀⟩ := isInteger_mul_of_den_dvd hden_dvd
+    have h4x' : algebraMap R K n₀ = 4 * x' := by rw [hn₀]; simp [map_ofNat]
     have h4Psi3_R : 4 * (3 * x₀ ^ 4 + W.b₂ * x₀ ^ 3 + 3 * W.b₄ * x₀ ^ 2 +
         3 * W.b₆ * x₀ + W.b₈) = κ₀ ^ 2 * (4 * x₀ - n₀) := by
       apply hinj
