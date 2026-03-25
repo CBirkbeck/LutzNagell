@@ -32,8 +32,8 @@ variable (W : WeierstrassCurve R)
 
 /-! ### y integral from x integral on curve -/
 
-/-- If `(x, y)` lies on the curve with `aᵢ ∈ R` and `x ∈ R`, then `y ∈ R`. -/
 omit [DecidableEq K] in
+/-- If `(x, y)` lies on the curve with `aᵢ ∈ R` and `x ∈ R`, then `y ∈ R`. -/
 theorem y_isInteger_of_x_isInteger_on_curve
     {x y : K}
     (hcurve : y ^ 2 + algebraMap R K W.a₁ * x * y + algebraMap R K W.a₃ * y =
@@ -57,8 +57,8 @@ theorem y_isInteger_of_x_isInteger_on_curve
 
 /-! ### Extract ψ = 0 from torsion -/
 
-/-- If `n • P = 0` in the Jacobian point group, then `ψ_n(x,y) = 0`. -/
 omit [IsDomain R] [UniqueFactorizationMonoid R] [DecidableEq K] [IsFractionRing R K] in
+/-- If `n • P = 0` in the Jacobian point group, then `ψ_n(x,y) = 0`. -/
 theorem evalEval_ψ_eq_zero_of_zsmul_eq_zero
     {x y : K} (hns : (curveK R K W).toAffine.Nonsingular x y) (n : ℤ)
     (htors : n • (Jacobian.Point.fromAffine
@@ -72,13 +72,13 @@ theorem evalEval_ψ_eq_zero_of_zsmul_eq_zero
 
 /-! ### General integrality from squarefree leading coefficient -/
 
+omit [DecidableEq K] in
 /-- **Key theorem.** If `x` is a root of `f ∈ R[X]` whose leading coefficient is squarefree,
 and `(x, y)` lies on the curve, then `x ∈ R`.
 
 This combines the rational root theorem (`den ∣ leadingCoeff`) with the denominator lemma
 (no prime factor of `den` can appear exactly once — but in a squarefree element, every prime
 factor appears exactly once, so `den` can have no prime factors at all, hence is a unit). -/
-omit [DecidableEq K] in
 theorem isInteger_of_root_squarefree_leading_coeff
     {x y : K}
     (heq : y ^ 2 + algebraMap R K W.a₁ * x * y + algebraMap R K W.a₃ * y =
@@ -108,8 +108,8 @@ of `preΨ_p` with `(p : R)`, which involves casting from `ℤ` to `R`.
 These require matching the leading coefficient of `preΨ_p` with `(p : R)`,
 which involves casting from `ℤ` to `R`. -/
 
-/-- For odd prime `p`, if `p • P = 0` and `(p : R)` is squarefree, then `x ∈ R`. -/
 omit [DecidableEq K] in
+/-- For odd prime `p`, if `p • P = 0` and `(p : R)` is squarefree, then `x ∈ R`. -/
 theorem x_isInteger_of_odd_prime_torsion_squarefree
     {x y : K} (hns : (curveK R K W).toAffine.Nonsingular x y)
     {p : ℕ} (hp : p.Prime) (hodd : p ≠ 2)
@@ -133,8 +133,8 @@ theorem x_isInteger_of_odd_prime_torsion_squarefree
 
 /-! ### ψ₂ = 0 implies 2•P = 0 -/
 
-/-- If `ψ₂(x,y) = 0`, then `2 • P = 0` in the affine group. -/
 omit [IsDomain R] [UniqueFactorizationMonoid R] [IsFractionRing R K] in
+/-- If `ψ₂(x,y) = 0`, then `2 • P = 0` in the affine group. -/
 theorem two_nsmul_eq_zero_of_ψ₂_eq_zero
     {x y : K} (hns : (curveK R K W).toAffine.Nonsingular x y)
     (hψ : (curveK R K W).ψ₂.evalEval x y = 0) :
@@ -174,9 +174,9 @@ theorem integrality_of_order_four_squarefree
 
 /-! ### Order-2 torsion: bounded denominators -/
 
+omit [DecidableEq K] in
 /-- If `2•P = 0`, then `den(x) ∣ (4 : R)`. Requires `(4 : R) ≠ 0`
 (automatic for `CharZero R`). -/
-omit [DecidableEq K] in
 theorem den_dvd_of_order_two (h4_ne : (4 : R) ≠ 0)
     {x y : K} (hns : (curveK R K W).toAffine.Nonsingular x y)
     (h2 : (2 : ℤ) • (Jacobian.Point.fromAffine (Affine.Point.some _ _ hns)) = 0) :
@@ -198,8 +198,8 @@ theorem den_dvd_of_order_two (h4_ne : (4 : R) ≠ 0)
 
 /-! ### Combined integrality -/
 
-/-- Full integrality for odd prime order when `(p : R)` is squarefree. -/
 omit [DecidableEq K] in
+/-- Full integrality for odd prime order when `(p : R)` is squarefree. -/
 theorem prime_order_integrality_squarefree
     {x y : K} (hns : (curveK R K W).toAffine.Nonsingular x y)
     {p : ℕ} (hp : p.Prime) (hodd : p ≠ 2)

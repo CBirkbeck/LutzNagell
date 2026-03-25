@@ -40,11 +40,11 @@ private lemma not_dvd_sum_of_not_dvd_cube {q α : R} (hq : Prime q) (hpa : ¬ q 
 
 /-! ### Clearing denominators -/
 
+omit [UniqueFactorizationMonoid R] in
 /-- The clearing-denominators equation for a point on a Weierstrass curve.
 
 If `x = α/d` and `y = γ/e` lie on the curve, then after multiplying
 by `d³ · e²` we obtain an equation in `R`. -/
-omit [UniqueFactorizationMonoid R] in
 private lemma clearing_denominators (W : WeierstrassCurve R)
     {x y : K}
     (heq : y ^ 2 + algebraMap R K W.a₁ * x * y + algebraMap R K W.a₃ * y =
