@@ -35,7 +35,8 @@ abbrev curveK : WeierstrassCurve K := W.map (algebraMap R K)
 lemma curveK_equation_iff (x y : K) :
     (curveK R K W).toAffine.Equation x y ↔
       y ^ 2 + algebraMap R K W.a₁ * x * y + algebraMap R K W.a₃ * y =
-        x ^ 3 + algebraMap R K W.a₂ * x ^ 2 + algebraMap R K W.a₄ * x + algebraMap R K W.a₆ := by
+      x ^ 3 + algebraMap R K W.a₂ * x ^ 2 + algebraMap R K W.a₄ * x +
+        algebraMap R K W.a₆ := by
   rw [WeierstrassCurve.Affine.equation_iff]
   simp [curveK]
 

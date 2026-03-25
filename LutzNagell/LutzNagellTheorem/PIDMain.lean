@@ -418,8 +418,8 @@ theorem lutz_nagell_pid_discriminant_of_torsion
 
 /-- For a Weierstrass curve with `a₁ = a₃ = 0` (i.e., `y² = x³ + a₂x² + a₄x + a₆`)
 with integral torsion point, either `y₀ = 0` or `y₀²` divides the cubic discriminant
-`4a₄³ + 27a₆² + 4a₂³a₆ - a₂²a₄² - 18a₂a₄a₆`. This specializes to `y₀² ∣ 4a₄³ + 27a₆²`
-when `a₂ = 0` (short Weierstrass). -/
+`4a₄³ + 27a₆² + 4a₂³a₆ - a₂²a₄² - 18a₂a₄a₆`. This specializes to
+`y₀² ∣ 4a₄³ + 27a₆²` when `a₂ = 0` (short Weierstrass). -/
 theorem lutz_nagell_cubicDisc_discriminant (ha₁ : W.a₁ = 0) (ha₃ : W.a₃ = 0)
     {x y : K} (hpt : (curveK R K W).toAffine.Nonsingular x y)
     (htor : IsOfFinAddOrder (Affine.Point.some _ _ hpt))
@@ -551,7 +551,8 @@ theorem lutz_nagell_number_field_discriminant
 
 /-- For a Weierstrass curve with `a₁ = a₃ = 0` over a number field of class number 1,
 if `(x₀, y₀)` is a nonzero torsion point with integral coordinates, then `y₀ = 0` or
-`y₀²` divides the cubic discriminant `4a₄³ + 27a₆² + 4a₂³a₆ - a₂²a₄² - 18a₂a₄a₆`. -/
+`y₀²` divides the cubic discriminant
+`4a₄³ + 27a₆² + 4a₂³a₆ - a₂²a₄² - 18a₂a₄a₆`. -/
 theorem lutz_nagell_number_field_cubicDisc_discriminant
     (K : Type*) [Field K] [NumberField K] [DecidableEq K]
     [IsPrincipalIdealRing (𝓞 K)]

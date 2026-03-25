@@ -5,7 +5,8 @@ import Mathlib.RingTheory.Localization.NumDen
 # Denominators on general Weierstrass curves over UFDs
 
 For a point on a general Weierstrass curve
-`y² + a₁xy + a₃y = x³ + a₂x² + a₄x + a₆` with `aᵢ ∈ R` (a UFD with fraction field `K`),
+`y² + a₁xy + a₃y = x³ + a₂x² + a₄x + a₆` with `aᵢ ∈ R` (a UFD with fraction
+field `K`),
 if a prime `q ∈ R` divides `den_R(x)` exactly once (i.e., `q | den` but `q² ∤ den`),
 we reach a contradiction.
 

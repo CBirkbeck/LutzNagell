@@ -142,7 +142,6 @@ theorem two_nsmul_eq_zero_of_ψ₂_eq_zero
   rw [WeierstrassCurve.ψ₂, WeierstrassCurve.Affine.evalEval_polynomialY] at hψ
   rw [two_nsmul]
   apply WeierstrassCurve.Affine.Point.add_of_Y_eq (h₁ := hns) (h₂ := hns) rfl
-  show y = (curveK R K W).toAffine.negY x y
   simp only [WeierstrassCurve.Affine.negY, curveK]
   linear_combination hψ
 
