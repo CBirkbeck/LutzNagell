@@ -168,11 +168,10 @@ theorem lutz_nagell_integrality_pid
       have h4_dvd : 4 ∣ addOrderOf P := by
         obtain ⟨k₁, hk₁⟩ := h2_dvd
         obtain ⟨q, hq, hqk₁⟩ := Nat.exists_prime_and_dvd (show k₁ ≠ 1 by omega)
-        have hqm : q ∣ addOrderOf P := dvd_trans hqk₁ ⟨2, by omega⟩
-        rw [h_all_two q hq hqm] at hqk₁
-        obtain ⟨j, hj⟩ := hqk₁
-        exact ⟨j, by omega⟩
-      exact integrality_of_four_dvd_order W hpt h4_dvd htor (hsf_all 2 (by decide) h2_dvd)
+        rw [h_all_two q hq (hqk₁.trans ⟨2, by omega⟩)] at hqk₁
+        obtain ⟨j, hj⟩ := hqk₁; exact ⟨j, by omega⟩
+      exact integrality_of_four_dvd_order W hpt h4_dvd htor
+        (hsf_all 2 (by decide) h2_dvd)
 
 /-! ### Discriminant divisibility -/
 
@@ -222,8 +221,8 @@ omit [IsDomain R] [IsPrincipalIdealRing R] [CharZero R] in
 /-- **Lutz–Nagell discriminant divisibility over PIDs.**
 
 For integral coordinates on the curve satisfying `κ₀² ∣ 4·Ψ₃(x₀)`,
-either κ₀ = 0 or κ₀² ∣ 4Δ. The hypothesis `κ₀² ∣ 4·Ψ₃(x₀)` follows from torsion
-via the coordinate formula for `2•P`. -/
+either κ₀ = 0 or κ₀² ∣ 4Δ. The hypothesis `κ₀² ∣ 4·Ψ₃(x₀)` follows from
+torsion via the coordinate formula for `2•P`. -/
 theorem lutz_nagell_pid_discriminant
     {x₀ y₀ : R}
     (hcurve : y₀ ^ 2 + W.a₁ * x₀ * y₀ + W.a₃ * y₀ =
@@ -306,7 +305,8 @@ private lemma Psi2Sq_eval_eq (x : K) :
   have hmap : (curveK R K W).Ψ₂Sq = W.Ψ₂Sq.map (algebraMap R K) := by
     change (W.map (algebraMap R K)).Ψ₂Sq = _; rw [WeierstrassCurve.map_Ψ₂Sq]
   rw [hmap, eval_map, WeierstrassCurve.Ψ₂Sq]
-  simp only [eval₂_add, eval₂_mul, eval₂_C, eval₂_X, eval₂_pow, eval₂_ofNat, map_ofNat, map_mul]
+  simp only [eval₂_add, eval₂_mul, eval₂_C, eval₂_X, eval₂_pow, eval₂_ofNat,
+    map_ofNat, map_mul]
 
 omit [IsDomain R] [IsPrincipalIdealRing R] [CharZero R] [DecidableEq K] [IsFractionRing R K] in
 private lemma Psi3_eval_eq (x : K) :
@@ -338,8 +338,6 @@ private lemma isInteger_mul_of_den_dvd {x : K} {n : R}
 
 /-! #### The Ψ₃ divisibility from torsion over PIDs -/
 
-/-- The core divisibility: from the coordinate formula for `2•P` and integrality of the
-doubled point, derive `κ₀² | 4·Ψ₃(x₀)` over a PID. -/
 private lemma kappa_sq_dvd_four_Psi3_of_torsion
     {x y : K} (hpt : (curveK R K W).toAffine.Nonsingular x y)
     (htor : IsOfFinAddOrder (Affine.Point.some _ _ hpt))
@@ -352,58 +350,43 @@ private lemma kappa_sq_dvd_four_Psi3_of_torsion
     (2 * y₀ + W.a₁ * x₀ + W.a₃) ^ 2 ∣
       4 * (3 * x₀ ^ 4 + W.b₂ * x₀ ^ 3 +
         3 * W.b₄ * x₀ ^ 2 + 3 * W.b₆ * x₀ + W.b₈) := by
-  set P := Affine.Point.some _ _ hpt
-  set κ₀ := 2 * y₀ + W.a₁ * x₀ + W.a₃
-  have hm_pos := htor.addOrderOf_pos
+  set P := Affine.Point.some _ _ hpt; set κ₀ := 2 * y₀ + W.a₁ * x₀ + W.a₃
+  have hm_pos : 0 < addOrderOf P := htor.addOrderOf_pos
   have hord_ne1 : addOrderOf P ≠ 1 :=
     fun h => Affine.Point.some_ne_zero hpt (AddMonoid.addOrderOf_eq_one_iff.mp h)
   have hord_ne2 : addOrderOf P ≠ 2 :=
     addOrderOf_ne_two_of_kappa_ne_zero W hpt hx hy hκ
   have hord_gt2 : 2 < addOrderOf P := by omega
-  have h2P_ne : (2 : ℕ) • P ≠ 0 := by
-    intro h
-    exact absurd (Nat.le_of_dvd (by omega) (addOrderOf_dvd_of_nsmul_eq_zero h))
+  have h2P_ne : (2 : ℕ) • P ≠ 0 := fun h =>
+    absurd (Nat.le_of_dvd (by omega) (addOrderOf_dvd_of_nsmul_eq_zero h))
       (not_le.mpr hord_gt2)
   obtain ⟨x', y', hns', h2P_eq⟩ := exists_some_of_ne_zero W h2P_ne
-  have h2P_tor : IsOfFinAddOrder (Affine.Point.some _ _ hns') := h2P_eq ▸ htor.nsmul
-  have h2P_zsmul : (2 : ℤ) • P = Affine.Point.some _ _ hns' := by
-    rw [show (2 : ℤ) = ↑(2 : ℕ) from rfl, natCast_zsmul]; exact h2P_eq
   have hsf_2P : ∀ p : ℕ, p.Prime → p ∣ addOrderOf (Affine.Point.some _ _ hns') →
-      Squarefree (p : R) := by
-    intro p hp hpd
-    exact hsf_all p hp (dvd_trans hpd (by
-      rw [← h2P_eq]
-      exact addOrderOf_dvd_of_mem_zmultiples ⟨2, rfl⟩))
-  have hcoord := x_coord_nsmul_eq W hpt (show (2 : ℤ) ≠ 0 by norm_num) hns' h2P_zsmul
+      Squarefree (p : R) := fun p hp hpd =>
+    hsf_all p hp (hpd.trans (by
+      rw [← h2P_eq]; exact addOrderOf_dvd_of_mem_zmultiples ⟨2, rfl⟩))
+  have hcoord := x_coord_nsmul_eq W hpt (show (2 : ℤ) ≠ 0 by norm_num) hns' (by
+    rw [show (2 : ℤ) = ↑(2 : ℕ) from rfl, natCast_zsmul]; exact h2P_eq)
   rw [PsiSq_two_eval_eq, Phi2_eval_eq] at hcoord
-  have hPsi3_K : eval x (curveK R K W).Ψ₃ =
-      (x - x') * eval x (curveK R K W).Ψ₂Sq := by linear_combination hcoord
   have hkappa_sq_K : (algebraMap R K κ₀) ^ 2 = eval x (curveK R K W).Ψ₂Sq := by
     rw [Psi2Sq_eval_eq, ← hx]
     have := congr_arg (algebraMap R K) hkappa_sq
-    simp only [map_add, map_mul, map_pow, map_ofNat] at this
-    linear_combination this
+    simp only [map_add, map_mul, map_pow, map_ofNat] at this; linear_combination this
   have hPsi3_eq : eval x (curveK R K W).Ψ₃ =
-      (x - x') * (algebraMap R K κ₀) ^ 2 := by rw [hPsi3_K, hkappa_sq_K]
+      (x - x') * (algebraMap R K κ₀) ^ 2 := by rw [hkappa_sq_K]; linear_combination hcoord
   rw [Psi3_eval_eq, ← hx] at hPsi3_eq
   have hinj := IsFractionRing.injective R K
-  rcases lutz_nagell_integrality_pid W hns' h2P_tor hsf_2P with
+  rcases lutz_nagell_integrality_pid W hns' (h2P_eq ▸ htor.nsmul) hsf_2P with
     ⟨⟨x'₀, hx'₀⟩, _⟩ | ⟨_, hden_dvd⟩
   · rw [← hx'₀] at hPsi3_eq
-    have hPsi3_R : 3 * x₀ ^ 4 + W.b₂ * x₀ ^ 3 + 3 * W.b₄ * x₀ ^ 2 +
-        3 * W.b₆ * x₀ + W.b₈ = κ₀ ^ 2 * (x₀ - x'₀) := by
-      apply hinj
+    exact dvd_mul_of_dvd_right ⟨x₀ - x'₀, hinj (by
       simp only [map_add, map_mul, map_pow, map_sub, map_ofNat]
-      linear_combination hPsi3_eq
-    exact dvd_mul_of_dvd_right ⟨x₀ - x'₀, hPsi3_R⟩ 4
+      linear_combination hPsi3_eq)⟩ 4
   · obtain ⟨n₀, hn₀⟩ := isInteger_mul_of_den_dvd hden_dvd
     have h4x' : algebraMap R K n₀ = 4 * x' := by rw [hn₀]; simp [map_ofNat]
-    have h4Psi3_R : 4 * (3 * x₀ ^ 4 + W.b₂ * x₀ ^ 3 + 3 * W.b₄ * x₀ ^ 2 +
-        3 * W.b₆ * x₀ + W.b₈) = κ₀ ^ 2 * (4 * x₀ - n₀) := by
-      apply hinj
+    exact ⟨4 * x₀ - n₀, hinj (by
       simp only [map_add, map_mul, map_pow, map_sub, map_ofNat]
-      linear_combination 4 * hPsi3_eq + (algebraMap R K κ₀) ^ 2 * h4x'
-    exact ⟨4 * x₀ - n₀, h4Psi3_R⟩
+      linear_combination 4 * hPsi3_eq + (algebraMap R K κ₀) ^ 2 * h4x')⟩
 
 /-! ### The full discriminant theorem from torsion -/
 
@@ -498,7 +481,8 @@ theorem lutz_nagell_number_field_discriminant
     (htor : IsOfFinAddOrder (Affine.Point.some _ _ hpt))
     (hsf_all : ∀ p : ℕ, p.Prime → p ∣ addOrderOf (Affine.Point.some _ _ hpt) →
       Squarefree (p : 𝓞 K))
-    {x₀ y₀ : 𝓞 K} (hx : algebraMap (𝓞 K) K x₀ = x) (hy : algebraMap (𝓞 K) K y₀ = y) :
+    {x₀ y₀ : 𝓞 K} (hx : algebraMap (𝓞 K) K x₀ = x)
+    (hy : algebraMap (𝓞 K) K y₀ = y) :
     (2 * y₀ + W.a₁ * x₀ + W.a₃) = 0 ∨
     (2 * y₀ + W.a₁ * x₀ + W.a₃) ^ 2 ∣ 4 * W.Δ :=
   PID.lutz_nagell_pid_discriminant_of_torsion W hpt htor hsf_all hx hy
