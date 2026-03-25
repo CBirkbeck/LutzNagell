@@ -21,6 +21,7 @@ variable {R : Type*} [CommRing R] [IsDomain R] [UniqueFactorizationMonoid R]
 variable {K : Type*} [Field K] [DecidableEq K] [Algebra R K] [IsFractionRing R K]
 variable (W : WeierstrassCurve R)
 
+omit [UniqueFactorizationMonoid R] in
 /-- `Φ_n - C c * ΨSq_n` is monic over `R` for any `c : R` and `n ≠ 0` (in `R`). -/
 theorem monic_Φ_sub_smul_ΨSq
     {n : ℤ} (hn : (n : R) ≠ 0) (c : R) :
@@ -36,6 +37,7 @@ theorem monic_Φ_sub_smul_ΨSq
 
 /-! ### The x-coordinate formula -/
 
+omit [IsDomain R] [UniqueFactorizationMonoid R] [IsFractionRing R K] in
 /-- The x-coordinate of `n • P` satisfies `x' · ΨSq_n(x) = Φ_n(x)`. -/
 theorem x_coord_nsmul_eq
     {x y : K} (hns : (curveK R K W).toAffine.Nonsingular x y)
@@ -57,8 +59,7 @@ theorem x_coord_nsmul_eq
   simp only [smulEval, Function.comp, Matrix.cons_val_zero, Matrix.cons_val_two,
     Matrix.head_cons, Matrix.tail_cons] at hX
   norm_num at hX
-  simp only [← algebraMap_int_eq, ← WeierstrassCurve.map_φ,
-    ← WeierstrassCurve.map_ψ] at hX
+  simp only [← WeierstrassCurve.map_φ, ← WeierstrassCurve.map_ψ] at hX
   rw [evalEval_φ_eq_eval_Φ (curveK R K W) hns.left n] at hX
   have hΨSq := evalEval_Ψ_sq_eq_eval_ΨSq (curveK R K W) hns.left n
   rw [← evalEval_ψ_eq_evalEval_Ψ (curveK R K W) hns.left n] at hΨSq

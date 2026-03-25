@@ -25,6 +25,7 @@ variable {K : Type*} [Field K] [Algebra R K] [IsFractionRing R K]
 
 /-! ### Helper: q ∤ (α³ + stuff·q) when q ∤ α -/
 
+omit [IsDomain R] [UniqueFactorizationMonoid R] in
 private lemma not_dvd_sum_of_not_dvd_cube {q α : R} (hq : Prime q) (hpa : ¬ q ∣ α)
     (c₂ c₄ c₆ : R) :
     ¬ q ∣ (α ^ 3 + c₂ * α ^ 2 * q + c₄ * α * q ^ 2 + c₆ * q ^ 3) := by
@@ -43,6 +44,7 @@ private lemma not_dvd_sum_of_not_dvd_cube {q α : R} (hq : Prime q) (hpa : ¬ q 
 
 If `x = α/d` and `y = γ/e` lie on the curve, then after multiplying
 by `d³ · e²` we obtain an equation in `R`. -/
+omit [UniqueFactorizationMonoid R] in
 private lemma clearing_denominators (W : WeierstrassCurve R)
     {x y : K}
     (heq : y ^ 2 + algebraMap R K W.a₁ * x * y + algebraMap R K W.a₃ * y =
